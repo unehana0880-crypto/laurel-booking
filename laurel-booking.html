@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Laurel Studio — 예약 관리</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap');
+:root{--bg:#F4F1EC;--dark:#1C1917;--card:#FFF;--border:#E5DDD5;--green:#4A7C59;--green-bg:#EBF4EE;--yellow:#B8860B;--yellow-bg:#FEF9E4;--red:#B94040;--red-bg:#FDEAEA;--mid:#7A726A;--accent:#C9A84C;--room2:#5B7FA6;--room2-bg:#EAF0F8;--room4:#7A5B9E;--room4-bg:#F0EAF8;--tab-h:64px;--hdr-h:54px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark);display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
+.hdr{background:var(--dark);height:var(--hdr-h);padding:0 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-logo{font-family:'DM Serif Display',serif;font-size:18px;color:#F4F1EC;}
+.hdr-logo em{color:var(--accent);font-style:italic;}
+.hdr-date{font-size:11px;color:#9A9088;}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + 8px);}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--tab-h);background:var(--card);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);z-index:50;}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-family:inherit;padding:0;}
+.tab .ti{font-size:20px;line-height:1;}
+.tab .tl{font-size:10px;font-weight:600;color:var(--mid);}
+.tab.active .tl{color:var(--green);}
+.tab.t-plus{background:var(--green);border-radius:14px;margin:8px 6px;}
+.tab.t-plus .tl{color:white!important;}
+.screen{display:none;}
+.screen.active{display:block;}
+.today-hdr{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
+.today-hdr-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.btn-share{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--dark);color:white;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);padding:4px 18px 10px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.today-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 18px 14px;}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;}
+.sum-num{font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;line-height:1;}
+.sum-label{font-size:10px;color:var(--mid);margin-top:3px;font-weight:500;}
+.today-slots,.slot-list{padding:0 18px;display:flex;flex-direction:column;gap:8px;}
+.slot-list{padding:0 14px;}
+.ts-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.ts-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.ts-time{font-size:14px;font-weight:700;flex:1;}
+.ts-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.ts-open{background:var(--green-bg);color:var(--green);}
+.ts-partial{background:var(--yellow-bg);color:var(--yellow);}
+.ts-full{background:var(--red-bg);color:var(--red);}
+.ts-add{width:30px;height:30px;background:var(--green);color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ts-rooms{display:grid;grid-template-columns:1fr 1fr;}
+.ts-divider{width:1px;background:var(--border);}
+.ts-room{padding:10px 12px;}
+.ts-rlabel{font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.rb{padding:2px 7px;border-radius:20px;font-size:10px;}
+.rb2{background:var(--room2-bg);color:var(--room2);}
+.rb4{background:var(--room4-bg);color:var(--room4);}
+.pips{display:flex;gap:4px;margin-bottom:6px;}
+.pip{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);}
+.pip.on2{background:var(--room2);border-color:transparent;}
+.pip.on4{background:var(--room4);border-color:transparent;}
+.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;}
+.bk-row{display:flex;align-items:center;gap:5px;}
+.bk-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-acts{display:flex;gap:3px;}
+.bk-btn{width:26px;height:26px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
+.btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
+.src-klook{background:#FFF0E0;color:#C05000;}
+.src-ig{background:#FEF0F6;color:#B02060;}
+.src-wa{background:#E8F8EE;color:#1A8035;}
+.src-web{background:var(--green-bg);color:var(--green);}
+.src-kkt{background:#FEF9D6;color:#7A6500;}
+.empty-r{font-size:11px;color:var(--border);padding:2px 0;}
+.share-popup{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:200;align-items:flex-end;justify-content:center;}
+.share-popup.open{display:flex;}
+.share-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:16px 20px 32px;}
+.share-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.share-title{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:12px;}
+.share-text{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;font-family:monospace;margin-bottom:14px;}
+.share-btns{display:flex;flex-direction:column;gap:8px;}
+.share-btn{padding:14px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+.sb-copy{background:var(--dark);color:white;}
+.sb-close{background:var(--bg);color:var(--mid);border:1px solid var(--border);}
+.cal-header{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
+.cal-month{font-family:'DM Serif Display',serif;font-size:20px;}
+.cal-arrows{display:flex;gap:6px;}
+.cal-arrows button{width:36px;height:36px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:16px;cursor:pointer;}
+.cal-grid{padding:0 14px 14px;}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+.cal-dow span{text-align:center;font-size:10px;font-weight:700;color:var(--mid);padding:4px 0;}
+.cal-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid transparent;cursor:pointer;}
+.cal-cell .cn{font-size:13px;font-weight:500;}
+.cal-cell .cbar{width:20px;height:3px;border-radius:2px;margin-top:3px;}
+.cal-cell:active:not(.empty){opacity:.7;}
+.cal-cell.today{border-color:var(--accent);}
+.cal-cell.selected{background:var(--dark);color:white;}
+.cal-cell.empty{pointer-events:none;}
+.legend{display:flex;gap:14px;padding:6px 18px 14px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);}
+.leg-dot{width:7px;height:7px;border-radius:50%;}
+.day-nav{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;}
+.btn-back{width:36px;height:36px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.day-nav-title{font-family:'DM Serif Display',serif;font-size:18px;flex:1;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:100;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-hdr{padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sheet-title{font-family:'DM Serif Display',serif;font-size:18px;display:flex;align-items:center;gap:8px;}
+.edit-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--yellow-bg);color:var(--yellow);}
+.btn-close{width:34px;height:34px;border:1px solid var(--border);background:none;border-radius:9px;font-size:16px;cursor:pointer;}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px;flex:1;}
+.sheet-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;padding-bottom:max(12px,env(safe-area-inset-bottom));}
+.fg{margin-bottom:15px;}
+label{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mid);margin-bottom:6px;}
+input,select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--green);background:white;}
+.room-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rpick{padding:14px;border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;}
+.rpick.active{border-color:var(--dark);background:var(--dark);color:white;}
+.rpick .rn{font-size:24px;font-weight:700;}
+.rpick .rl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.tpick{padding:12px 4px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;}
+.tpick .tt{font-size:12px;font-weight:600;}
+.tpick .tr{font-size:10px;opacity:.6;margin-top:2px;}
+.tpick.active{border-color:var(--dark);background:var(--dark);color:white;}
+.tpick.t-full{background:var(--red-bg);border-color:var(--border);}
+.tpick.t-full .tr{color:var(--red);}
+.malert{padding:11px 13px;border-radius:10px;font-size:12px;margin-bottom:12px;font-weight:500;}
+.a-ok{background:var(--green-bg);color:var(--green);border:1px solid #B0D4BC;}
+.a-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid #F0D98A;}
+.a-err{background:var(--red-bg);color:var(--red);border:1px solid #F9C0C0;}
+.btn-save{flex:1;padding:14px;background:var(--green);color:white;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-cancel{padding:14px 18px;border:1.5px solid var(--border);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
+.btn-del-bk{padding:14px 16px;border:1.5px solid var(--red);color:var(--red);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
+.no-sel{text-align:center;padding:60px 20px;color:var(--mid);}
+.no-sel .ni{font-size:48px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">Laurel <em>Studio</em></div>
+  <div class="hdr-date" id="hdrDate"></div>
+</div>
+
+<div class="content">
+  <!-- 오늘 -->
+  <div class="screen active" id="scrToday">
+    <div class="today-hdr">
+      <div class="today-hdr-title" id="todayTitle"></div>
+      <button class="btn-share" onclick="openShare()">📤 공유</button>
+    </div>
+    <div class="sync-badge"><div class="sync-dot"></div>예약 데이터 저장 중</div>
+    <div class="today-summary" id="todaySummary"></div>
+    <div class="today-slots" id="todaySlots"></div>
+    <div style="height:14px"></div>
+  </div>
+
+  <!-- 캘린더 -->
+  <div class="screen" id="scrCal">
+    <div class="cal-header">
+      <div class="cal-month" id="calLabel"></div>
+      <div class="cal-arrows">
+        <button onclick="changeMonth(-1)">&#8249;</button>
+        <button onclick="changeMonth(1)">&#8250;</button>
+      </div>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="cal-cells" id="calCells"></div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>여유</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>일부 마감</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>마감</div>
+    </div>
+  </div>
+
+  <!-- 날짜별 -->
+  <div class="screen" id="scrDay">
+    <div class="day-nav">
+      <button class="btn-back" onclick="goTab('cal')">&#8592;</button>
+      <div style="flex:1">
+        <div class="day-nav-title" id="dayTitle">날짜 선택</div>
+        <div style="font-size:11px;color:var(--mid)">시간대별 예약 현황</div>
+      </div>
+      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
+    </div>
+    <div class="slot-list" id="slotList"></div>
+    <div style="height:14px"></div>
+  </div>
+</div>
+
+<!-- 탭바 -->
+<div class="tabbar">
+  <button class="tab active" id="tab-today" onclick="goTab('today')"><span class="ti">&#9728;&#65039;</span><span class="tl">오늘</span></button>
+  <button class="tab" id="tab-cal" onclick="goTab('cal')"><span class="ti">&#128197;</span><span class="tl">캘린더</span></button>
+  <button class="tab t-plus" onclick="openModal()"><span class="ti" style="color:white;font-size:24px">+</span><span class="tl">추가</span></button>
+  <button class="tab" id="tab-day" onclick="goTab('day')"><span class="ti">&#128203;</span><span class="tl">날짜별</span></button>
+</div>
+
+<!-- 공유 팝업 -->
+<div class="share-popup" id="sharePopup" onclick="if(event.target===this)closeShare()">
+  <div class="share-sheet">
+    <div class="share-handle"></div>
+    <div class="share-title" id="shareTitle">예약 현황 공유</div>
+    <div class="share-text" id="shareText"></div>
+    <div class="share-btns">
+      <button class="share-btn sb-copy" onclick="copyShare()">📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
+      <button class="share-btn sb-close" onclick="closeShare()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 예약 추가/수정 모달 -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-title"><span id="sheetTitle">예약 추가</span><span class="edit-chip" id="editChip" style="display:none">수정 중</span></div>
+      <button class="btn-close" onclick="closeModal()">&#10005;</button>
+    </div>
+    <div class="sheet-body">
+      <div id="sheetAlert"></div>
+      <div class="fg"><label>날짜</label><input type="date" id="mDate" onchange="onDateChange()"></div>
+      <div class="fg"><label>시간</label><div class="time-grid" id="timePicker"></div></div>
+      <div class="fg"><label>룸</label>
+        <div class="room-picker">
+          <div class="rpick" id="rp2" onclick="pickRoom(2)"><div class="rn">2</div><div class="rl">인룸</div></div>
+          <div class="rpick" id="rp4" onclick="pickRoom(4)"><div class="rn">4</div><div class="rl">인룸</div></div>
+        </div>
+      </div>
+      <div class="fg"><label>인원</label><select id="mPax" onchange="checkCap()"><option value="">룸 먼저 선택</option></select></div>
+      <div class="fg"><label>이름 (선택)</label><input type="text" id="mName" placeholder="고객 이름"></div>
+      <div class="fg"><label>언어 (선택)</label>
+        <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
+      </div>
+      <div class="fg"><label>프로그램 (선택)</label>
+        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어</option><option>ORI 분석 + 케어</option><option>바디 케어</option></select>
+      </div>
+      <div class="fg"><label>예약 경로</label>
+        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>직접 방문</option><option>기타</option></select>
+      </div>
+      <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
+    </div>
+    <div class="sheet-foot" id="sheetFoot"></div>
+  </div>
+</div>
+
+<script>
+var SLOTS=['10:00','11:00','13:00','15:00','17:00','19:00'];
+var SLOT_LBL=['오전 10시','오전 11시','오후 1시','오후 3시','오후 5시','오후 7시'];
+var ROOM_CAP={2:2,4:4};
+var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt'};
+var STORAGE_KEY='laurel_bookings_v1';
+
+var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
+var mRoom=null, mSlot=null, editId=null;
+
+function getTODAY(){ var n=new Date(); return fmt(n.getFullYear(),n.getMonth(),n.getDate()); }
+function fmt(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+function slotBks(date,slot){ return bookings.filter(function(b){return b.date===date&&b.slot===slot;}); }
+function roomRem(date,slot,room,excl){
+  var used=slotBks(date,slot).filter(function(b){return b.room===room&&b.id!==excl;}).reduce(function(s,b){return s+b.pax;},0);
+  return ROOM_CAP[room]-used;
+}
+function dayStatus(date){
+  var full=0;
+  SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0)full++; if(roomRem(date,s,4)===0)full++; });
+  return full===0?'none':full===SLOTS.length*2?'full':'partial';
+}
+
+function loadData(){ try{ var d=localStorage.getItem(STORAGE_KEY); if(d) bookings=JSON.parse(d); }catch(e){ bookings=[]; } }
+function saveData(){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(bookings)); }catch(e){} }
+
+function renderAll(){ renderCal(); renderToday(); if(selDate) renderDay(); }
+
+function goTab(tab){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  ['today','cal','day'].forEach(function(t){ var el=document.getElementById('tab-'+t); if(el)el.classList.remove('active'); });
+  if(tab==='today'){ document.getElementById('scrToday').classList.add('active'); document.getElementById('tab-today').classList.add('active'); renderToday(); }
+  if(tab==='cal'){ document.getElementById('scrCal').classList.add('active'); document.getElementById('tab-cal').classList.add('active'); }
+  if(tab==='day'){ document.getElementById('scrDay').classList.add('active'); document.getElementById('tab-day').classList.add('active'); renderDay(); }
+}
+
+function renderToday(){
+  var date=getTODAY();
+  var now=new Date();
+  document.getElementById('todayTitle').textContent=(now.getMonth()+1)+'월 '+now.getDate()+'일 오늘';
+  var totalPax=bookings.filter(function(b){return b.date===date;}).reduce(function(s,b){return s+b.pax;},0);
+  var totalSlots=SLOTS.filter(function(s){return slotBks(date,s).length>0;}).length;
+  var fullSlots=0;
+  SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0&&roomRem(date,s,4)===0) fullSlots++; });
+  document.getElementById('todaySummary').innerHTML='<div class="sum-card"><div class="sum-num" style="color:var(--room2)">'+totalPax+'</div><div class="sum-label">총 고객 수</div></div><div class="sum-card"><div class="sum-num" style="color:var(--green)">'+totalSlots+'</div><div class="sum-label">예약 슬롯</div></div><div class="sum-card"><div class="sum-num" style="color:var(--red)">'+fullSlots+'</div><div class="sum-label">마감 슬롯</div></div>';
+  document.getElementById('todaySlots').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(date,slot,i);}).join('');
+}
+
+var MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+function changeMonth(d){ selM+=d; if(selM>11){selM=0;selY++;} if(selM<0){selM=11;selY--;} renderCal(); }
+function renderCal(){
+  document.getElementById('calLabel').textContent=selY+'년 '+MO[selM];
+  var cells=document.getElementById('calCells'); cells.innerHTML='';
+  var first=new Date(selY,selM,1).getDay();
+  var days=new Date(selY,selM+1,0).getDate();
+  var today=getTODAY();
+  for(var i=0;i<first;i++){ var el=document.createElement('div'); el.className='cal-cell empty'; cells.appendChild(el); }
+  for(var d=1;d<=days;d++){
+    var key=fmt(selY,selM,d);
+    var st=dayStatus(key);
+    var hasB=bookings.some(function(b){return b.date===key;});
+    var col=st==='full'?'var(--red)':st==='partial'?'var(--accent)':'var(--green)';
+    var el=document.createElement('div');
+    el.className='cal-cell'+(key===today?' today':'')+(selDate===key?' selected':'');
+    el.innerHTML='<div class="cn">'+d+'</div>'+(hasB?'<div class="cbar" style="background:'+col+'"></div>':'');
+    (function(k){ el.onclick=function(){selectDate(k);}; })(key);
+    cells.appendChild(el);
+  }
+}
+function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
+
+function renderDay(){
+  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">📅</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
+  var parts=selDate.split('-'); var y=+parts[0],m=+parts[1],d=+parts[2];
+  var dt=new Date(y,m-1,d);
+  var wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  document.getElementById('dayTitle').textContent=m+'월 '+d+'일 ('+wds[dt.getDay()]+')';
+  document.getElementById('slotList').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(selDate,slot,i);}).join('');
+}
+
+function slotCardHTML(date,slot,i){
+  var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4),rem=r2+r4;
+  var sc=rem===0?'ts-full':rem<4?'ts-partial':'ts-open';
+  var sl=rem===0?'마감':rem<3?'잔여 적음':'예약 가능';
+  var u2=ROOM_CAP[2]-r2,u4=ROOM_CAP[4]-r4;
+  var b2=slotBks(date,slot).filter(function(b){return b.room===2;});
+  var b4=slotBks(date,slot).filter(function(b){return b.room===4;});
+  return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/6</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms"><div class="ts-room"><div class="ts-rlabel"><span class="rb rb2">2인룸</span> '+r2+'/2</div><div class="pips">'+[1,2].map(function(n){return '<div class="pip '+(n<=u2?'on2':'')+'"></div>';}).join('')+'</div>'+(b2.length?b2.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div><div class="ts-divider"></div><div class="ts-room"><div class="ts-rlabel"><span class="rb rb4">4인룸</span> '+r4+'/4</div><div class="pips">'+[1,2,3,4].map(function(n){return '<div class="pip '+(n<=u4?'on4':'')+'"></div>';}).join('')+'</div>'+(b4.length?b4.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div></div></div>';
+}
+
+function bkMini(b){
+  var sc=SRC_CLS[b.source]||'';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">&#9999;&#65039;</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">&#10005;</button></div></div><div class="bk-tags">'+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
+}
+
+function buildShareText(date){
+  var parts=date.split('-'); var y=+parts[0],m=+parts[1],d=+parts[2];
+  var dt=new Date(y,m-1,d);
+  var wds=['일','월','화','수','목','금','토'];
+  var txt='🌿 Laurel Studio 예약 현황\n📅 '+m+'월 '+d+'일 ('+wds[dt.getDay()]+')\n'+'─'.repeat(22)+'\n';
+  var totalPax=0;
+  SLOTS.forEach(function(slot,i){
+    var bks=slotBks(date,slot);
+    if(!bks.length){ txt+='\n⏰ '+SLOT_LBL[i]+' — 예약 없음\n'; return; }
+    var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4);
+    txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r2+r4)+'/6)\n';
+    bks.forEach(function(b){
+      totalPax+=b.pax;
+      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+'\n';
+    });
+  });
+  txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
+  return txt;
+}
+
+var shareDate=null;
+function openShare(date){
+  shareDate=date||getTODAY();
+  var parts=shareDate.split('-');
+  document.getElementById('shareTitle').textContent=parts[1]+'월 '+parts[2]+'일 예약 현황 공유';
+  document.getElementById('shareText').textContent=buildShareText(shareDate);
+  document.getElementById('sharePopup').classList.add('open');
+}
+function closeShare(){ document.getElementById('sharePopup').classList.remove('open'); }
+function copyShare(){
+  var txt=document.getElementById('shareText').textContent;
+  var btn=document.querySelector('.sb-copy');
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).catch(function(){}); }
+  else{ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  btn.textContent='✅ 복사됐어요!';
+  setTimeout(function(){ btn.textContent='📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)'; },2000);
+}
+
+function openModal(date,slot){
+  editId=null; mRoom=null; mSlot=slot||null;
+  document.getElementById('sheetTitle').textContent='예약 추가';
+  document.getElementById('editChip').style.display='none';
+  document.getElementById('sheetFoot').innerHTML='<button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
+  resetForm(date||selDate||getTODAY());
+  document.getElementById('overlay').classList.add('open');
+  if(slot){ setTimeout(function(){ var el=document.querySelector('.tpick[data-s="'+slot+'"]'); if(el&&!el.classList.contains('t-full'))el.click(); },60); }
+}
+function openEdit(id){
+  var b=bookings.find(function(x){return x.id===id;}); if(!b) return;
+  editId=id; mRoom=b.room; mSlot=b.slot;
+  document.getElementById('sheetTitle').textContent='예약 수정';
+  document.getElementById('editChip').style.display='inline-flex';
+  document.getElementById('sheetFoot').innerHTML='<button class="btn-del-bk" onclick="delB(\''+id+'\',true)">삭제</button><button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
+  document.getElementById('mDate').value=b.date;
+  document.getElementById('mName').value=b.name||'';
+  document.getElementById('mLang').value=b.lang||'';
+  document.getElementById('mProgram').value=b.program||'';
+  document.getElementById('mSource').value=b.source||'';
+  document.getElementById('mNote').value=b.note||'';
+  document.getElementById('sheetAlert').innerHTML='';
+  renderTimePicker(b.slot);
+  document.getElementById('rp2').className='rpick'+(b.room===2?' active':'');
+  document.getElementById('rp4').className='rpick'+(b.room===4?' active':'');
+  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
+  for(var i=1;i<=b.room;i++) pax.innerHTML+='<option value="'+i+'"'+(i===b.pax?' selected':'')+'>'+i+'명</option>';
+  checkCap(); document.getElementById('overlay').classList.add('open');
+}
+function resetForm(date){
+  document.getElementById('mDate').value=date;
+  document.getElementById('mName').value=''; document.getElementById('mNote').value='';
+  document.getElementById('mPax').innerHTML='<option value="">룸 먼저 선택</option>';
+  document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0; document.getElementById('mSource').selectedIndex=0;
+  document.getElementById('sheetAlert').innerHTML='';
+  document.getElementById('rp2').className='rpick'; document.getElementById('rp4').className='rpick';
+  renderTimePicker();
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; }
+
+function renderTimePicker(active){
+  var date=document.getElementById('mDate').value; var act=active||mSlot;
+  document.getElementById('timePicker').innerHTML=SLOTS.map(function(s,i){
+    var r2=date?roomRem(date,s,2,editId):ROOM_CAP[2]; var r4=date?roomRem(date,s,4,editId):ROOM_CAP[4]; var full=r2===0&&r4===0;
+    return '<div class="tpick'+(full?' t-full':'')+(act===s?' active':'')+'" data-s="'+s+'" onclick="pickSlot(\''+s+'\','+(full?'true':'false')+')"><div class="tt">'+SLOT_LBL[i]+'</div><div class="tr">'+(full?'마감':'잔'+(r2+r4))+'</div></div>';
+  }).join('');
+}
+function pickSlot(s,full){ if(full&&!editId)return; mSlot=s; document.querySelectorAll('.tpick').forEach(function(el){el.classList.toggle('active',el.dataset.s===s);}); checkCap(); }
+function pickRoom(n){
+  mRoom=n;
+  document.getElementById('rp2').className='rpick'+(n===2?' active':'');
+  document.getElementById('rp4').className='rpick'+(n===4?' active':'');
+  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
+  for(var i=1;i<=n;i++) pax.innerHTML+='<option value="'+i+'">'+i+'명</option>';
+  checkCap();
+}
+function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; renderTimePicker(); checkCap(); }
+function checkCap(){
+  var date=document.getElementById('mDate').value; var pax=parseInt(document.getElementById('mPax').value)||0; var al=document.getElementById('sheetAlert');
+  if(!date||!mRoom||!mSlot||!pax){al.innerHTML='';return;}
+  var rem=roomRem(date,mSlot,mRoom,editId);
+  if(rem===0) al.innerHTML='<div class="malert a-err">⚠️ '+mRoom+'인룸이 이 시간에 마감됐어요</div>';
+  else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+mRoom+'인룸에 '+rem+'자리만 남아요</div>';
+  else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
+}
+function saveB(){
+  var date=document.getElementById('mDate').value; var pax=parseInt(document.getElementById('mPax').value)||0; var al=document.getElementById('sheetAlert');
+  if(!date){al.innerHTML='<div class="malert a-err">날짜를 선택해주세요</div>';return;}
+  if(!mSlot){al.innerHTML='<div class="malert a-err">시간을 선택해주세요</div>';return;}
+  if(!mRoom){al.innerHTML='<div class="malert a-err">룸을 선택해주세요</div>';return;}
+  if(!pax){al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>';return;}
+  var rem=roomRem(date,mSlot,mRoom,editId);
+  if(pax>rem){al.innerHTML='<div class="malert a-err">'+mRoom+'인룸 잔여('+rem+')를 초과해요</div>';return;}
+  var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,note:document.getElementById('mNote').value.trim()};
+  if(editId) bookings=bookings.map(function(b){return b.id===editId?bk:b;}); else bookings.push(bk);
+  saveData(); closeModal(); renderAll();
+}
+function delB(id,fromModal){
+  if(!confirm('이 예약을 삭제할까요?'))return;
+  bookings=bookings.filter(function(b){return b.id!==id;});
+  saveData(); if(fromModal)closeModal(); renderAll();
+}
+
+var now=new Date();
+document.getElementById('hdrDate').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
+loadData(); renderAll();
+selDate=getTODAY(); renderCal(); goTab('today');
+</script>
+</body>
+</html>
