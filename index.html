@@ -121,8 +121,8 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .rpick .rn{font-size:24px;font-weight:700;}
 .rpick .rl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;}
 .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-.tpick{padding:12px 4px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;}
-.tpick .tt{font-size:12px;font-weight:600;}
+.tpick{padding:10px 4px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;}
+.tpick .tt{font-size:11px;font-weight:600;}
 .tpick .tr{font-size:10px;opacity:.6;margin-top:2px;}
 .tpick.active{border-color:var(--dark);background:var(--dark);color:white;}
 .tpick.t-full{background:var(--red-bg);border-color:var(--border);}
@@ -146,11 +146,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 </div>
 
 <div class="content">
-  <!-- 오늘 -->
   <div class="screen active" id="scrToday">
     <div class="today-hdr">
       <div class="today-hdr-title" id="todayTitle"></div>
-      <button class="btn-share" onclick="openShare()">📤 공유</button>
+      <button class="btn-share" onclick="openShare()">&#128228; 공유</button>
     </div>
     <div class="sync-badge"><div class="sync-dot"></div>예약 데이터 저장 중</div>
     <div class="today-summary" id="todaySummary"></div>
@@ -158,7 +157,6 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     <div style="height:14px"></div>
   </div>
 
-  <!-- 캘린더 -->
   <div class="screen" id="scrCal">
     <div class="cal-header">
       <div class="cal-month" id="calLabel"></div>
@@ -178,7 +176,6 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     </div>
   </div>
 
-  <!-- 날짜별 -->
   <div class="screen" id="scrDay">
     <div class="day-nav">
       <button class="btn-back" onclick="goTab('cal')">&#8592;</button>
@@ -186,14 +183,13 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <div class="day-nav-title" id="dayTitle">날짜 선택</div>
         <div style="font-size:11px;color:var(--mid)">시간대별 예약 현황</div>
       </div>
-      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
+      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">&#128228;</button>
     </div>
     <div class="slot-list" id="slotList"></div>
     <div style="height:14px"></div>
   </div>
 </div>
 
-<!-- 탭바 -->
 <div class="tabbar">
   <button class="tab active" id="tab-today" onclick="goTab('today')"><span class="ti">&#9728;&#65039;</span><span class="tl">오늘</span></button>
   <button class="tab" id="tab-cal" onclick="goTab('cal')"><span class="ti">&#128197;</span><span class="tl">캘린더</span></button>
@@ -201,20 +197,18 @@ input:focus,select:focus{border-color:var(--green);background:white;}
   <button class="tab" id="tab-day" onclick="goTab('day')"><span class="ti">&#128203;</span><span class="tl">날짜별</span></button>
 </div>
 
-<!-- 공유 팝업 -->
 <div class="share-popup" id="sharePopup" onclick="if(event.target===this)closeShare()">
   <div class="share-sheet">
     <div class="share-handle"></div>
     <div class="share-title" id="shareTitle">예약 현황 공유</div>
     <div class="share-text" id="shareText"></div>
     <div class="share-btns">
-      <button class="share-btn sb-copy" onclick="copyShare()">📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
+      <button class="share-btn sb-copy" onclick="copyShare()">&#128203; 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
       <button class="share-btn sb-close" onclick="closeShare()">닫기</button>
     </div>
   </div>
 </div>
 
-<!-- 예약 추가/수정 모달 -->
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -238,10 +232,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
       </div>
       <div class="fg"><label>프로그램 (선택)</label>
-        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어</option><option>ORI 분석 + 케어</option><option>바디 케어</option></select>
+        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>ORI 분석 + 케어</option><option>바디 케어</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -250,10 +244,11 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 </div>
 
 <script>
-var SLOTS=['10:00','11:00','13:00','15:00','17:00','19:00'];
-var SLOT_LBL=['오전 10시','오전 11시','오후 1시','오후 3시','오후 5시','오후 7시'];
+// ── 10시~19시 매시간 총 10개 슬롯 ──
+var SLOTS=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+var SLOT_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
 var ROOM_CAP={2:2,4:4};
-var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt'};
+var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web'};
 var STORAGE_KEY='laurel_bookings_v1';
 
 var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
@@ -321,7 +316,7 @@ function renderCal(){
 function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
 
 function renderDay(){
-  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">📅</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
+  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">&#128197;</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
   var parts=selDate.split('-'); var y=+parts[0],m=+parts[1],d=+parts[2];
   var dt=new Date(y,m-1,d);
   var wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
@@ -341,7 +336,7 @@ function slotCardHTML(date,slot,i){
 
 function bkMini(b){
   var sc=SRC_CLS[b.source]||'';
-  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">&#9999;&#65039;</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">&#10005;</button></div></div><div class="bk-tags">'+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">&#9999;&#65039;</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">&#10005;</button></div></div><div class="bk-tags">'+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">&#128221;'+b.note+'</span>':'')+'</div></div>';
 }
 
 function buildShareText(date){
@@ -352,12 +347,13 @@ function buildShareText(date){
   var totalPax=0;
   SLOTS.forEach(function(slot,i){
     var bks=slotBks(date,slot);
-    if(!bks.length){ txt+='\n⏰ '+SLOT_LBL[i]+' — 예약 없음\n'; return; }
+    if(!bks.length) return;
     var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4);
     txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r2+r4)+'/6)\n';
     bks.forEach(function(b){
       totalPax+=b.pax;
-      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+'\n';
+      var prog=b.program||'모름';
+      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(prog?' | '+prog:'')+'\n';
     });
   });
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
