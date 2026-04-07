@@ -30,7 +30,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .today-hdr-title{font-family:'DM Serif Display',serif;font-size:20px;}
 .btn-share{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--dark);color:white;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .sync-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);padding:4px 18px 10px;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#ccc;}
+.sync-dot.connected{background:var(--green);animation:pulse 2s infinite;}
+.sync-dot.syncing{background:var(--accent);animation:pulse .5s infinite;}
+.sync-dot.error{background:var(--red);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 .today-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 18px 14px;}
 .sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;}
@@ -151,7 +154,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
       <div class="today-hdr-title" id="todayTitle"></div>
       <button class="btn-share" onclick="openShare()">&#128228; 공유</button>
     </div>
-    <div class="sync-badge"><div class="sync-dot"></div>예약 데이터 저장 중</div>
+    <div class="sync-badge">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Firebase 연결 중...</span>
+    </div>
     <div class="today-summary" id="todaySummary"></div>
     <div class="today-slots" id="todaySlots"></div>
     <div style="height:14px"></div>
@@ -243,13 +249,28 @@ input:focus,select:focus{border-color:var(--green);background:white;}
   </div>
 </div>
 
-<script>
-// ── 10시~19시 매시간 총 10개 슬롯 ──
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA0nJAcOV64dq2QT2BVSsGxis99VTA2eEI",
+  authDomain: "laurel-studio.firebaseapp.com",
+  databaseURL: "https://laurel-studio-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "laurel-studio",
+  storageBucket: "laurel-studio.firebasestorage.app",
+  messagingSenderId: "516403607342",
+  appId: "1:516403607342:web:5389cdfe397afcee1cacbf",
+  measurementId: "G-JXJVBBYW9P"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
 var SLOTS=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
 var SLOT_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
 var ROOM_CAP={2:2,4:4};
 var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web'};
-var STORAGE_KEY='laurel_bookings_v1';
 
 var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
 var mRoom=null, mSlot=null, editId=null;
@@ -267,9 +288,31 @@ function dayStatus(date){
   return full===0?'none':full===SLOTS.length*2?'full':'partial';
 }
 
-function loadData(){ try{ var d=localStorage.getItem(STORAGE_KEY); if(d) bookings=JSON.parse(d); }catch(e){ bookings=[]; } }
-function saveData(){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(bookings)); }catch(e){} }
+// ── Firebase 동기화 상태 ───────────────────
+function setSyncStatus(status) {
+  var dot=document.getElementById('syncDot'), label=document.getElementById('syncLabel');
+  if(status==='connected'){ dot.className='sync-dot connected'; label.textContent='실시간 동기화 중'; }
+  else if(status==='syncing'){ dot.className='sync-dot syncing'; label.textContent='저장 중...'; }
+  else if(status==='error'){ dot.className='sync-dot error'; label.textContent='연결 오류 — 재시도 중'; }
+  else { dot.className='sync-dot'; label.textContent='Firebase 연결 중...'; }
+}
 
+// 전체 예약 실시간 리스닝
+onValue(ref(db,'bookings'),(snap)=>{
+  const data=snap.val();
+  bookings=data?Object.values(data):[];
+  renderAll();
+  setSyncStatus('connected');
+});
+
+onValue(ref(db,'.info/connected'),(snap)=>{
+  if(!snap.val()) setSyncStatus('error');
+});
+
+async function saveToFirebase(bk){ setSyncStatus('syncing'); await set(ref(db,'bookings/'+bk.id),bk); }
+async function deleteFromFirebase(id){ setSyncStatus('syncing'); await remove(ref(db,'bookings/'+id)); }
+
+// ── 렌더링 ────────────────────────────────
 function renderAll(){ renderCal(); renderToday(); if(selDate) renderDay(); }
 
 function goTab(tab){
@@ -281,8 +324,7 @@ function goTab(tab){
 }
 
 function renderToday(){
-  var date=getTODAY();
-  var now=new Date();
+  var date=getTODAY(), now=new Date();
   document.getElementById('todayTitle').textContent=(now.getMonth()+1)+'월 '+now.getDate()+'일 오늘';
   var totalPax=bookings.filter(function(b){return b.date===date;}).reduce(function(s,b){return s+b.pax;},0);
   var totalSlots=SLOTS.filter(function(s){return slotBks(date,s).length>0;}).length;
@@ -297,14 +339,10 @@ function changeMonth(d){ selM+=d; if(selM>11){selM=0;selY++;} if(selM<0){selM=11
 function renderCal(){
   document.getElementById('calLabel').textContent=selY+'년 '+MO[selM];
   var cells=document.getElementById('calCells'); cells.innerHTML='';
-  var first=new Date(selY,selM,1).getDay();
-  var days=new Date(selY,selM+1,0).getDate();
-  var today=getTODAY();
+  var first=new Date(selY,selM,1).getDay(), days=new Date(selY,selM+1,0).getDate(), today=getTODAY();
   for(var i=0;i<first;i++){ var el=document.createElement('div'); el.className='cal-cell empty'; cells.appendChild(el); }
   for(var d=1;d<=days;d++){
-    var key=fmt(selY,selM,d);
-    var st=dayStatus(key);
-    var hasB=bookings.some(function(b){return b.date===key;});
+    var key=fmt(selY,selM,d), st=dayStatus(key), hasB=bookings.some(function(b){return b.date===key;});
     var col=st==='full'?'var(--red)':st==='partial'?'var(--accent)':'var(--green)';
     var el=document.createElement('div');
     el.className='cal-cell'+(key===today?' today':'')+(selDate===key?' selected':'');
@@ -317,20 +355,17 @@ function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
 
 function renderDay(){
   if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">&#128197;</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
-  var parts=selDate.split('-'); var y=+parts[0],m=+parts[1],d=+parts[2];
-  var dt=new Date(y,m-1,d);
-  var wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  var parts=selDate.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var dt=new Date(y,m-1,d), wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   document.getElementById('dayTitle').textContent=m+'월 '+d+'일 ('+wds[dt.getDay()]+')';
   document.getElementById('slotList').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(selDate,slot,i);}).join('');
 }
 
 function slotCardHTML(date,slot,i){
   var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4),rem=r2+r4;
-  var sc=rem===0?'ts-full':rem<4?'ts-partial':'ts-open';
-  var sl=rem===0?'마감':rem<3?'잔여 적음':'예약 가능';
-  var u2=ROOM_CAP[2]-r2,u4=ROOM_CAP[4]-r4;
-  var b2=slotBks(date,slot).filter(function(b){return b.room===2;});
-  var b4=slotBks(date,slot).filter(function(b){return b.room===4;});
+  var sc=rem===0?'ts-full':rem<4?'ts-partial':'ts-open', sl=rem===0?'마감':rem<3?'잔여 적음':'예약 가능';
+  var u2=ROOM_CAP[2]-r2, u4=ROOM_CAP[4]-r4;
+  var b2=slotBks(date,slot).filter(function(b){return b.room===2;}), b4=slotBks(date,slot).filter(function(b){return b.room===4;});
   return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/6</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms"><div class="ts-room"><div class="ts-rlabel"><span class="rb rb2">2인룸</span> '+r2+'/2</div><div class="pips">'+[1,2].map(function(n){return '<div class="pip '+(n<=u2?'on2':'')+'"></div>';}).join('')+'</div>'+(b2.length?b2.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div><div class="ts-divider"></div><div class="ts-room"><div class="ts-rlabel"><span class="rb rb4">4인룸</span> '+r4+'/4</div><div class="pips">'+[1,2,3,4].map(function(n){return '<div class="pip '+(n<=u4?'on4':'')+'"></div>';}).join('')+'</div>'+(b4.length?b4.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div></div></div>';
 }
 
@@ -340,38 +375,25 @@ function bkMini(b){
 }
 
 function buildShareText(date){
-  var parts=date.split('-'); var y=+parts[0],m=+parts[1],d=+parts[2];
-  var dt=new Date(y,m-1,d);
-  var wds=['일','월','화','수','목','금','토'];
+  var parts=date.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var dt=new Date(y,m-1,d), wds=['일','월','화','수','목','금','토'];
   var txt='🌿 Laurel Studio 예약 현황\n📅 '+m+'월 '+d+'일 ('+wds[dt.getDay()]+')\n'+'─'.repeat(22)+'\n';
   var totalPax=0;
   SLOTS.forEach(function(slot,i){
-    var bks=slotBks(date,slot);
-    if(!bks.length) return;
-    var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4);
+    var bks=slotBks(date,slot); if(!bks.length) return;
+    var r2=roomRem(date,slot,2), r4=roomRem(date,slot,4);
     txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r2+r4)+'/6)\n';
-    bks.forEach(function(b){
-      totalPax+=b.pax;
-      var prog=b.program||'모름';
-      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(prog?' | '+prog:'')+'\n';
-    });
+    bks.forEach(function(b){ totalPax+=b.pax; txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(b.program?' | '+b.program:'')+'\n'; });
   });
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
   return txt;
 }
 
 var shareDate=null;
-function openShare(date){
-  shareDate=date||getTODAY();
-  var parts=shareDate.split('-');
-  document.getElementById('shareTitle').textContent=parts[1]+'월 '+parts[2]+'일 예약 현황 공유';
-  document.getElementById('shareText').textContent=buildShareText(shareDate);
-  document.getElementById('sharePopup').classList.add('open');
-}
+function openShare(date){ shareDate=date||getTODAY(); var parts=shareDate.split('-'); document.getElementById('shareTitle').textContent=parts[1]+'월 '+parts[2]+'일 예약 현황 공유'; document.getElementById('shareText').textContent=buildShareText(shareDate); document.getElementById('sharePopup').classList.add('open'); }
 function closeShare(){ document.getElementById('sharePopup').classList.remove('open'); }
 function copyShare(){
-  var txt=document.getElementById('shareText').textContent;
-  var btn=document.querySelector('.sb-copy');
+  var txt=document.getElementById('shareText').textContent, btn=document.querySelector('.sb-copy');
   if(navigator.clipboard){ navigator.clipboard.writeText(txt).catch(function(){}); }
   else{ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
   btn.textContent='✅ 복사됐어요!';
@@ -393,12 +415,9 @@ function openEdit(id){
   document.getElementById('sheetTitle').textContent='예약 수정';
   document.getElementById('editChip').style.display='inline-flex';
   document.getElementById('sheetFoot').innerHTML='<button class="btn-del-bk" onclick="delB(\''+id+'\',true)">삭제</button><button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
-  document.getElementById('mDate').value=b.date;
-  document.getElementById('mName').value=b.name||'';
-  document.getElementById('mLang').value=b.lang||'';
-  document.getElementById('mProgram').value=b.program||'';
-  document.getElementById('mSource').value=b.source||'';
-  document.getElementById('mNote').value=b.note||'';
+  document.getElementById('mDate').value=b.date; document.getElementById('mName').value=b.name||'';
+  document.getElementById('mLang').value=b.lang||''; document.getElementById('mProgram').value=b.program||'';
+  document.getElementById('mSource').value=b.source||''; document.getElementById('mNote').value=b.note||'';
   document.getElementById('sheetAlert').innerHTML='';
   renderTimePicker(b.slot);
   document.getElementById('rp2').className='rpick'+(b.room===2?' active':'');
@@ -408,8 +427,7 @@ function openEdit(id){
   checkCap(); document.getElementById('overlay').classList.add('open');
 }
 function resetForm(date){
-  document.getElementById('mDate').value=date;
-  document.getElementById('mName').value=''; document.getElementById('mNote').value='';
+  document.getElementById('mDate').value=date; document.getElementById('mName').value=''; document.getElementById('mNote').value='';
   document.getElementById('mPax').innerHTML='<option value="">룸 먼저 선택</option>';
   document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0; document.getElementById('mSource').selectedIndex=0;
   document.getElementById('sheetAlert').innerHTML='';
@@ -419,9 +437,9 @@ function resetForm(date){
 function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; }
 
 function renderTimePicker(active){
-  var date=document.getElementById('mDate').value; var act=active||mSlot;
+  var date=document.getElementById('mDate').value, act=active||mSlot;
   document.getElementById('timePicker').innerHTML=SLOTS.map(function(s,i){
-    var r2=date?roomRem(date,s,2,editId):ROOM_CAP[2]; var r4=date?roomRem(date,s,4,editId):ROOM_CAP[4]; var full=r2===0&&r4===0;
+    var r2=date?roomRem(date,s,2,editId):ROOM_CAP[2], r4=date?roomRem(date,s,4,editId):ROOM_CAP[4], full=r2===0&&r4===0;
     return '<div class="tpick'+(full?' t-full':'')+(act===s?' active':'')+'" data-s="'+s+'" onclick="pickSlot(\''+s+'\','+(full?'true':'false')+')"><div class="tt">'+SLOT_LBL[i]+'</div><div class="tr">'+(full?'마감':'잔'+(r2+r4))+'</div></div>';
   }).join('');
 }
@@ -436,34 +454,47 @@ function pickRoom(n){
 }
 function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; renderTimePicker(); checkCap(); }
 function checkCap(){
-  var date=document.getElementById('mDate').value; var pax=parseInt(document.getElementById('mPax').value)||0; var al=document.getElementById('sheetAlert');
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
   if(!date||!mRoom||!mSlot||!pax){al.innerHTML='';return;}
   var rem=roomRem(date,mSlot,mRoom,editId);
   if(rem===0) al.innerHTML='<div class="malert a-err">⚠️ '+mRoom+'인룸이 이 시간에 마감됐어요</div>';
   else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+mRoom+'인룸에 '+rem+'자리만 남아요</div>';
   else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
 }
-function saveB(){
-  var date=document.getElementById('mDate').value; var pax=parseInt(document.getElementById('mPax').value)||0; var al=document.getElementById('sheetAlert');
+
+async function saveB(){
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
   if(!date){al.innerHTML='<div class="malert a-err">날짜를 선택해주세요</div>';return;}
   if(!mSlot){al.innerHTML='<div class="malert a-err">시간을 선택해주세요</div>';return;}
   if(!mRoom){al.innerHTML='<div class="malert a-err">룸을 선택해주세요</div>';return;}
   if(!pax){al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>';return;}
   var rem=roomRem(date,mSlot,mRoom,editId);
   if(pax>rem){al.innerHTML='<div class="malert a-err">'+mRoom+'인룸 잔여('+rem+')를 초과해요</div>';return;}
-  var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,note:document.getElementById('mNote').value.trim()};
-  if(editId) bookings=bookings.map(function(b){return b.id===editId?bk:b;}); else bookings.push(bk);
-  saveData(); closeModal(); renderAll();
-}
-function delB(id,fromModal){
-  if(!confirm('이 예약을 삭제할까요?'))return;
-  bookings=bookings.filter(function(b){return b.id!==id;});
-  saveData(); if(fromModal)closeModal(); renderAll();
+  var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,
+    name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,
+    program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,
+    note:document.getElementById('mNote').value.trim()};
+  await saveToFirebase(bk);
+  closeModal();
 }
 
+async function delB(id,fromModal){
+  if(!confirm('이 예약을 삭제할까요?'))return;
+  await deleteFromFirebase(id);
+  if(fromModal) closeModal();
+}
+
+// window 노출
+window.goTab=goTab; window.openModal=openModal; window.openEdit=openEdit;
+window.closeModal=closeModal; window.saveB=saveB; window.delB=delB;
+window.pickRoom=pickRoom; window.pickSlot=pickSlot; window.onDateChange=onDateChange;
+window.checkCap=checkCap; window.changeMonth=changeMonth; window.selectDate=selectDate;
+window.openShare=openShare; window.closeShare=closeShare; window.copyShare=copyShare;
+window.renderTimePicker=renderTimePicker;
+
+// 초기화
 var now=new Date();
 document.getElementById('hdrDate').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
-loadData(); renderAll();
 selDate=getTODAY(); renderCal(); goTab('today');
 </script>
 </body>
