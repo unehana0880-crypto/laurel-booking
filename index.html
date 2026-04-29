@@ -24,8 +24,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .tab.active .tl{color:var(--green);}
 .tab.t-plus{background:var(--green);border-radius:14px;margin:8px 6px;}
 .tab.t-plus .tl{color:white!important;}
-.screen{display:none;}
-.screen.active{display:block;}
+.screen{display:none;}.screen.active{display:block;}
 .today-hdr{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
 .today-hdr-title{font-family:'DM Serif Display',serif;font-size:20px;}
 .btn-share{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--dark);color:white;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
@@ -67,6 +66,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .bk-btn{width:26px;height:26px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
 .bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
 .btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
+.btag-bed{background:var(--accent);color:white;font-weight:700;}
 .src-klook{background:#FFF0E0;color:#C05000;}
 .src-ig{background:#FEF0F6;color:#B02060;}
 .src-wa{background:#E8F8EE;color:#1A8035;}
@@ -139,6 +139,16 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .btn-del-bk{padding:14px 16px;border:1.5px solid var(--red);color:var(--red);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
 .no-sel{text-align:center;padding:60px 20px;color:var(--mid);}
 .no-sel .ni{font-size:48px;margin-bottom:12px;}
+/* ★ 베드 선택 UI ★ */
+.bed-picker{display:none;margin-top:8px;}
+.bed-picker.visible{display:block;}
+.bed-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.bed-btn{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:white;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.bed-btn:active{transform:scale(.95);}
+.bed-btn.active{border-color:var(--accent);background:var(--accent);color:white;}
+.bed-btn.taken{background:var(--border);color:var(--mid);opacity:.5;cursor:not-allowed;}
+.bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:10px;}
+.bed-room-label:first-child{margin-top:0;}
 </style>
 </head>
 <body>
@@ -152,7 +162,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
   <div class="screen active" id="scrToday">
     <div class="today-hdr">
       <div class="today-hdr-title" id="todayTitle"></div>
-      <button class="btn-share" onclick="openShare()">&#128228; 공유</button>
+      <button class="btn-share" onclick="openShare()">📤 공유</button>
     </div>
     <div class="sync-badge">
       <div class="sync-dot" id="syncDot"></div>
@@ -167,8 +177,8 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     <div class="cal-header">
       <div class="cal-month" id="calLabel"></div>
       <div class="cal-arrows">
-        <button onclick="changeMonth(-1)">&#8249;</button>
-        <button onclick="changeMonth(1)">&#8250;</button>
+        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="changeMonth(1)">›</button>
       </div>
     </div>
     <div class="cal-grid">
@@ -184,12 +194,12 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 
   <div class="screen" id="scrDay">
     <div class="day-nav">
-      <button class="btn-back" onclick="goTab('cal')">&#8592;</button>
+      <button class="btn-back" onclick="goTab('cal')">←</button>
       <div style="flex:1">
         <div class="day-nav-title" id="dayTitle">날짜 선택</div>
         <div style="font-size:11px;color:var(--mid)">시간대별 예약 현황</div>
       </div>
-      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">&#128228;</button>
+      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
     </div>
     <div class="slot-list" id="slotList"></div>
     <div style="height:14px"></div>
@@ -197,10 +207,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 </div>
 
 <div class="tabbar">
-  <button class="tab active" id="tab-today" onclick="goTab('today')"><span class="ti">&#9728;&#65039;</span><span class="tl">오늘</span></button>
-  <button class="tab" id="tab-cal" onclick="goTab('cal')"><span class="ti">&#128197;</span><span class="tl">캘린더</span></button>
+  <button class="tab active" id="tab-today" onclick="goTab('today')"><span class="ti">☀️</span><span class="tl">오늘</span></button>
+  <button class="tab" id="tab-cal" onclick="goTab('cal')"><span class="ti">📅</span><span class="tl">캘린더</span></button>
   <button class="tab t-plus" onclick="openModal()"><span class="ti" style="color:white;font-size:24px">+</span><span class="tl">추가</span></button>
-  <button class="tab" id="tab-day" onclick="goTab('day')"><span class="ti">&#128203;</span><span class="tl">날짜별</span></button>
+  <button class="tab" id="tab-day" onclick="goTab('day')"><span class="ti">📋</span><span class="tl">날짜별</span></button>
 </div>
 
 <div class="share-popup" id="sharePopup" onclick="if(event.target===this)closeShare()">
@@ -209,7 +219,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     <div class="share-title" id="shareTitle">예약 현황 공유</div>
     <div class="share-text" id="shareText"></div>
     <div class="share-btns">
-      <button class="share-btn sb-copy" onclick="copyShare()">&#128203; 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
+      <button class="share-btn sb-copy" onclick="copyShare()">📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
       <button class="share-btn sb-close" onclick="closeShare()">닫기</button>
     </div>
   </div>
@@ -220,7 +230,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     <div class="sheet-handle"></div>
     <div class="sheet-hdr">
       <div class="sheet-title"><span id="sheetTitle">예약 추가</span><span class="edit-chip" id="editChip" style="display:none">수정 중</span></div>
-      <button class="btn-close" onclick="closeModal()">&#10005;</button>
+      <button class="btn-close" onclick="closeModal()">✕</button>
     </div>
     <div class="sheet-body">
       <div id="sheetAlert"></div>
@@ -233,6 +243,14 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         </div>
       </div>
       <div class="fg"><label>인원</label><select id="mPax" onchange="checkCap()"><option value="">룸 먼저 선택</option></select></div>
+      <!-- ★ 베드 번호 선택 ★ -->
+      <div class="fg">
+        <label>베드 번호 배정</label>
+        <div class="bed-picker" id="bedPicker">
+          <div id="bedButtons"></div>
+        </div>
+        <div id="bedHint" style="font-size:11px;color:var(--mid);margin-top:4px;">룸과 시간을 선택하면 베드를 배정할 수 있어요</div>
+      </div>
       <div class="fg"><label>이름 (선택)</label><input type="text" id="mName" placeholder="고객 이름"></div>
       <div class="fg"><label>언어 (선택)</label>
         <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
@@ -260,8 +278,7 @@ const firebaseConfig = {
   projectId: "laurel-studio",
   storageBucket: "laurel-studio.firebasestorage.app",
   messagingSenderId: "516403607342",
-  appId: "1:516403607342:web:5389cdfe397afcee1cacbf",
-  measurementId: "G-JXJVBBYW9P"
+  appId: "1:516403607342:web:5389cdfe397afcee1cacbf"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -273,7 +290,7 @@ var ROOM_CAP={2:2,4:4};
 var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web'};
 
 var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
-var mRoom=null, mSlot=null, editId=null;
+var mRoom=null, mSlot=null, editId=null, mBeds=[];
 
 function getTODAY(){ var n=new Date(); return fmt(n.getFullYear(),n.getMonth(),n.getDate()); }
 function fmt(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
@@ -288,7 +305,55 @@ function dayStatus(date){
   return full===0?'none':full===SLOTS.length*2?'full':'partial';
 }
 
-// ── Firebase 동기화 상태 ───────────────────
+// ★ 베드 사용 현황 조회 ★
+function takenBeds(date, slot, room, exclId) {
+  var beds = [];
+  slotBks(date, slot).filter(function(b){ return b.room === room && b.id !== exclId; }).forEach(function(b){
+    if (b.beds && b.beds.length) beds = beds.concat(b.beds);
+  });
+  return beds;
+}
+
+// ★ 베드 선택 UI 렌더 ★
+function renderBedPicker() {
+  var picker = document.getElementById('bedPicker');
+  var hint = document.getElementById('bedHint');
+  var btnsEl = document.getElementById('bedButtons');
+  var date = document.getElementById('mDate').value;
+
+  if (!mRoom || !mSlot || !date) {
+    picker.classList.remove('visible');
+    hint.textContent = '룸과 시간을 선택하면 베드를 배정할 수 있어요';
+    return;
+  }
+
+  picker.classList.add('visible');
+  var maxBed = mRoom; // 2인룸 = 2개, 4인룸 = 4개
+  var taken = takenBeds(date, mSlot, mRoom, editId);
+  var roomLabel = mRoom + '인룸';
+  var pax = parseInt(document.getElementById('mPax').value) || 0;
+
+  var html = '<div class="bed-room-label">🛏️ ' + roomLabel + ' 베드 선택' + (pax ? ' (' + pax + '명 → ' + pax + '개 선택)' : '') + '</div>';
+  html += '<div class="bed-grid">';
+  for (var i = 1; i <= maxBed; i++) {
+    var isTaken = taken.indexOf(i) !== -1;
+    var isActive = mBeds.indexOf(i) !== -1;
+    html += '<button class="bed-btn' + (isActive ? ' active' : '') + (isTaken ? ' taken' : '') + '" onclick="toggleBed(' + i + ',' + isTaken + ')">' + i + '</button>';
+  }
+  html += '</div>';
+  btnsEl.innerHTML = html;
+  hint.textContent = taken.length ? '회색 베드는 이미 배정됨' : '';
+}
+
+window.toggleBed = function(num, isTaken) {
+  if (isTaken) return;
+  var idx = mBeds.indexOf(num);
+  if (idx !== -1) { mBeds.splice(idx, 1); }
+  else { mBeds.push(num); }
+  mBeds.sort();
+  renderBedPicker();
+};
+
 function setSyncStatus(status) {
   var dot=document.getElementById('syncDot'), label=document.getElementById('syncLabel');
   if(status==='connected'){ dot.className='sync-dot connected'; label.textContent='실시간 동기화 중'; }
@@ -297,14 +362,12 @@ function setSyncStatus(status) {
   else { dot.className='sync-dot'; label.textContent='Firebase 연결 중...'; }
 }
 
-// 전체 예약 실시간 리스닝
 onValue(ref(db,'bookings'),(snap)=>{
   const data=snap.val();
   bookings=data?Object.values(data):[];
   renderAll();
   setSyncStatus('connected');
 });
-
 onValue(ref(db,'.info/connected'),(snap)=>{
   if(!snap.val()) setSyncStatus('error');
 });
@@ -312,7 +375,6 @@ onValue(ref(db,'.info/connected'),(snap)=>{
 async function saveToFirebase(bk){ setSyncStatus('syncing'); await set(ref(db,'bookings/'+bk.id),bk); }
 async function deleteFromFirebase(id){ setSyncStatus('syncing'); await remove(ref(db,'bookings/'+id)); }
 
-// ── 렌더링 ────────────────────────────────
 function renderAll(){ renderCal(); renderToday(); if(selDate) renderDay(); }
 
 function goTab(tab){
@@ -354,7 +416,7 @@ function renderCal(){
 function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
 
 function renderDay(){
-  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">&#128197;</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
+  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">📅</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
   var parts=selDate.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
   var dt=new Date(y,m-1,d), wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   document.getElementById('dayTitle').textContent=m+'월 '+d+'일 ('+wds[dt.getDay()]+')';
@@ -369,11 +431,14 @@ function slotCardHTML(date,slot,i){
   return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/6</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms"><div class="ts-room"><div class="ts-rlabel"><span class="rb rb2">2인룸</span> '+r2+'/2</div><div class="pips">'+[1,2].map(function(n){return '<div class="pip '+(n<=u2?'on2':'')+'"></div>';}).join('')+'</div>'+(b2.length?b2.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div><div class="ts-divider"></div><div class="ts-room"><div class="ts-rlabel"><span class="rb rb4">4인룸</span> '+r4+'/4</div><div class="pips">'+[1,2,3,4].map(function(n){return '<div class="pip '+(n<=u4?'on4':'')+'"></div>';}).join('')+'</div>'+(b4.length?b4.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div></div></div>';
 }
 
+// ★ 베드 번호 표시 추가 ★
 function bkMini(b){
   var sc=SRC_CLS[b.source]||'';
-  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">&#9999;&#65039;</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">&#10005;</button></div></div><div class="bk-tags">'+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">&#128221;'+b.note+'</span>':'')+'</div></div>';
+  var bedTag = b.beds && b.beds.length ? '<span class="btag btag-bed">🛏️ ' + b.beds.join(',') + '번</span>' : '';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div><div class="bk-tags">'+bedTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
 }
 
+// ★ 공유 텍스트에 베드 번호 포함 ★
 function buildShareText(date){
   var parts=date.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
   var dt=new Date(y,m-1,d), wds=['일','월','화','수','목','금','토'];
@@ -383,7 +448,10 @@ function buildShareText(date){
     var bks=slotBks(date,slot); if(!bks.length) return;
     var r2=roomRem(date,slot,2), r4=roomRem(date,slot,4);
     txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r2+r4)+'/6)\n';
-    bks.forEach(function(b){ totalPax+=b.pax; txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(b.program?' | '+b.program:'')+'\n'; });
+    bks.forEach(function(b){ totalPax+=b.pax;
+      var bedStr = b.beds && b.beds.length ? ' | 🛏️' + b.beds.join(',') + '번' : '';
+      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+'\n';
+    });
   });
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
   return txt;
@@ -401,7 +469,7 @@ function copyShare(){
 }
 
 function openModal(date,slot){
-  editId=null; mRoom=null; mSlot=slot||null;
+  editId=null; mRoom=null; mSlot=slot||null; mBeds=[];
   document.getElementById('sheetTitle').textContent='예약 추가';
   document.getElementById('editChip').style.display='none';
   document.getElementById('sheetFoot').innerHTML='<button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
@@ -411,7 +479,7 @@ function openModal(date,slot){
 }
 function openEdit(id){
   var b=bookings.find(function(x){return x.id===id;}); if(!b) return;
-  editId=id; mRoom=b.room; mSlot=b.slot;
+  editId=id; mRoom=b.room; mSlot=b.slot; mBeds=b.beds?b.beds.slice():[];
   document.getElementById('sheetTitle').textContent='예약 수정';
   document.getElementById('editChip').style.display='inline-flex';
   document.getElementById('sheetFoot').innerHTML='<button class="btn-del-bk" onclick="delB(\''+id+'\',true)">삭제</button><button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
@@ -424,7 +492,7 @@ function openEdit(id){
   document.getElementById('rp4').className='rpick'+(b.room===4?' active':'');
   var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
   for(var i=1;i<=b.room;i++) pax.innerHTML+='<option value="'+i+'"'+(i===b.pax?' selected':'')+'>'+i+'명</option>';
-  checkCap(); document.getElementById('overlay').classList.add('open');
+  checkCap(); renderBedPicker(); document.getElementById('overlay').classList.add('open');
 }
 function resetForm(date){
   document.getElementById('mDate').value=date; document.getElementById('mName').value=''; document.getElementById('mNote').value='';
@@ -432,9 +500,10 @@ function resetForm(date){
   document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0; document.getElementById('mSource').selectedIndex=0;
   document.getElementById('sheetAlert').innerHTML='';
   document.getElementById('rp2').className='rpick'; document.getElementById('rp4').className='rpick';
-  renderTimePicker();
+  mBeds=[];
+  renderTimePicker(); renderBedPicker();
 }
-function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; mBeds=[]; }
 
 function renderTimePicker(active){
   var date=document.getElementById('mDate').value, act=active||mSlot;
@@ -443,16 +512,16 @@ function renderTimePicker(active){
     return '<div class="tpick'+(full?' t-full':'')+(act===s?' active':'')+'" data-s="'+s+'" onclick="pickSlot(\''+s+'\','+(full?'true':'false')+')"><div class="tt">'+SLOT_LBL[i]+'</div><div class="tr">'+(full?'마감':'잔'+(r2+r4))+'</div></div>';
   }).join('');
 }
-function pickSlot(s,full){ if(full&&!editId)return; mSlot=s; document.querySelectorAll('.tpick').forEach(function(el){el.classList.toggle('active',el.dataset.s===s);}); checkCap(); }
+function pickSlot(s,full){ if(full&&!editId)return; mSlot=s; mBeds=[]; document.querySelectorAll('.tpick').forEach(function(el){el.classList.toggle('active',el.dataset.s===s);}); checkCap(); renderBedPicker(); }
 function pickRoom(n){
-  mRoom=n;
+  mRoom=n; mBeds=[];
   document.getElementById('rp2').className='rpick'+(n===2?' active':'');
   document.getElementById('rp4').className='rpick'+(n===4?' active':'');
   var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
   for(var i=1;i<=n;i++) pax.innerHTML+='<option value="'+i+'">'+i+'명</option>';
-  checkCap();
+  checkCap(); renderBedPicker();
 }
-function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; renderTimePicker(); checkCap(); }
+function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; mBeds=[]; renderTimePicker(); checkCap(); renderBedPicker(); }
 function checkCap(){
   var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
   if(!date||!mRoom||!mSlot||!pax){al.innerHTML='';return;}
@@ -460,6 +529,7 @@ function checkCap(){
   if(rem===0) al.innerHTML='<div class="malert a-err">⚠️ '+mRoom+'인룸이 이 시간에 마감됐어요</div>';
   else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+mRoom+'인룸에 '+rem+'자리만 남아요</div>';
   else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
+  renderBedPicker();
 }
 
 async function saveB(){
@@ -471,6 +541,7 @@ async function saveB(){
   var rem=roomRem(date,mSlot,mRoom,editId);
   if(pax>rem){al.innerHTML='<div class="malert a-err">'+mRoom+'인룸 잔여('+rem+')를 초과해요</div>';return;}
   var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,
+    beds:mBeds.length?mBeds:[],
     name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,
     program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,
     note:document.getElementById('mNote').value.trim()};
@@ -484,7 +555,6 @@ async function delB(id,fromModal){
   if(fromModal) closeModal();
 }
 
-// window 노출
 window.goTab=goTab; window.openModal=openModal; window.openEdit=openEdit;
 window.closeModal=closeModal; window.saveB=saveB; window.delB=delB;
 window.pickRoom=pickRoom; window.pickSlot=pickSlot; window.onDateChange=onDateChange;
@@ -492,7 +562,6 @@ window.checkCap=checkCap; window.changeMonth=changeMonth; window.selectDate=sele
 window.openShare=openShare; window.closeShare=closeShare; window.copyShare=copyShare;
 window.renderTimePicker=renderTimePicker;
 
-// 초기화
 var now=new Date();
 document.getElementById('hdrDate').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
 selDate=getTODAY(); renderCal(); goTab('today');
