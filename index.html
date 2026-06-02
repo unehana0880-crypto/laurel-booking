@@ -365,11 +365,16 @@ function setSyncStatus(status) {
 onValue(ref(db,'bookings'),(snap)=>{
   const data=snap.val();
   bookings=data?Object.values(data):[];
+  // ── 데이터 정규화: pax 숫자 보장 + slot을 "HH:00"으로 통일 ──
+  bookings.forEach(function(b){
+    b.pax = parseInt(b.pax) || 1;                  // 깨진 pax → 1
+    if (b.slot) {
+      var hh = String(b.slot).match(/(\d{1,2})/);  // "13:00:00","13시" 등에서 시 추출
+      if (hh) b.slot = String(parseInt(hh[1])).padStart(2,'0') + ':00';
+    }
+  });
   renderAll();
   setSyncStatus('connected');
-});
-onValue(ref(db,'.info/connected'),(snap)=>{
-  if(!snap.val()) setSyncStatus('error');
 });
 
 async function saveToFirebase(bk){ setSyncStatus('syncing'); await set(ref(db,'bookings/'+bk.id),bk); }
