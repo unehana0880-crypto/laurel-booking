@@ -1,840 +1,583 @@
-// ═══════════════════════════════════════════════════════════════
-// Laurel Studio — 예약 자동 연동 스크립트 v2 (통합 수정본)
-// Acuity (구글 캘린더) + Klook (Gmail) → Firebase (laurel-booking)
-// ✅ v2: 취소 / 부분 취소 / 예약 변경 자동 감지
-// ✅ FIX: 방문안내 파서 이름 충돌 해결 (parseKlookEmail → parseKlookDirections)
-// ✅ FIX: 단계별 try/catch / Firebase 저장 검증 / 저장 성공 시에만 처리완료 기록
-// ═══════════════════════════════════════════════════════════════
-//
-// 📋 세팅: script.google.com → "Laurel Booking AutoSync" 열기
-//   → Code.gs 전체 삭제 → 이 코드 전체 붙여넣기 → 저장(Ctrl+S)
-//   → 실행 → "setup" 1회 실행 (트리거가 이미 있으면 안 해도 됨)
-//
-// ═══════════════════════════════════════════════════════════════
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Laurel Studio — 예약 관리</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap');
+:root{--bg:#F4F1EC;--dark:#1C1917;--card:#FFF;--border:#E5DDD5;--green:#4A7C59;--green-bg:#EBF4EE;--yellow:#B8860B;--yellow-bg:#FEF9E4;--red:#B94040;--red-bg:#FDEAEA;--mid:#7A726A;--accent:#C9A84C;--room2:#5B7FA6;--room2-bg:#EAF0F8;--room4:#7A5B9E;--room4-bg:#F0EAF8;--tab-h:64px;--hdr-h:54px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark);display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
+.hdr{background:var(--dark);height:var(--hdr-h);padding:0 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-logo{font-family:'DM Serif Display',serif;font-size:18px;color:#F4F1EC;}
+.hdr-logo em{color:var(--accent);font-style:italic;}
+.hdr-date{font-size:11px;color:#9A9088;}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + 8px);}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--tab-h);background:var(--card);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);z-index:50;}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-family:inherit;padding:0;}
+.tab .ti{font-size:20px;line-height:1;}
+.tab .tl{font-size:10px;font-weight:600;color:var(--mid);}
+.tab.active .tl{color:var(--green);}
+.tab.t-plus{background:var(--green);border-radius:14px;margin:8px 6px;}
+.tab.t-plus .tl{color:white!important;}
+.screen{display:none;}.screen.active{display:block;}
+.today-hdr{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
+.today-hdr-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.btn-share{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--dark);color:white;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);padding:4px 18px 10px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#ccc;}
+.sync-dot.connected{background:var(--green);animation:pulse 2s infinite;}
+.sync-dot.syncing{background:var(--accent);animation:pulse .5s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.today-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 18px 14px;}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;}
+.sum-num{font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;line-height:1;}
+.sum-label{font-size:10px;color:var(--mid);margin-top:3px;font-weight:500;}
+.today-slots,.slot-list{padding:0 18px;display:flex;flex-direction:column;gap:8px;}
+.slot-list{padding:0 14px;}
+.ts-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.ts-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.ts-time{font-size:14px;font-weight:700;flex:1;}
+.ts-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.ts-open{background:var(--green-bg);color:var(--green);}
+.ts-partial{background:var(--yellow-bg);color:var(--yellow);}
+.ts-full{background:var(--red-bg);color:var(--red);}
+.ts-add{width:30px;height:30px;background:var(--green);color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ts-rooms{display:grid;grid-template-columns:1fr 1fr;}
+.ts-divider{width:1px;background:var(--border);}
+.ts-room{padding:10px 12px;}
+.ts-rlabel{font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.rb{padding:2px 7px;border-radius:20px;font-size:10px;}
+.rb2{background:var(--room2-bg);color:var(--room2);}
+.rb4{background:var(--room4-bg);color:var(--room4);}
+.pips{display:flex;gap:4px;margin-bottom:6px;}
+.pip{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);}
+.pip.on2{background:var(--room2);border-color:transparent;}
+.pip.on4{background:var(--room4);border-color:transparent;}
+.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;}
+.bk-row{display:flex;align-items:center;gap:5px;}
+.bk-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-acts{display:flex;gap:3px;}
+.bk-btn{width:26px;height:26px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
+.btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
+.btag-bed{background:var(--accent);color:white;font-weight:700;}
+.src-klook{background:#FFF0E0;color:#C05000;}
+.src-ig{background:#FEF0F6;color:#B02060;}
+.src-wa{background:#E8F8EE;color:#1A8035;}
+.src-web{background:var(--green-bg);color:var(--green);}
+.src-kkt{background:#FEF9D6;color:#7A6500;}
+.empty-r{font-size:11px;color:var(--border);padding:2px 0;}
+.share-popup{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:200;align-items:flex-end;justify-content:center;}
+.share-popup.open{display:flex;}
+.share-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:16px 20px 32px;}
+.share-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.share-title{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:12px;}
+.share-text{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;font-family:monospace;margin-bottom:14px;}
+.share-btns{display:flex;flex-direction:column;gap:8px;}
+.share-btn{padding:14px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+.sb-copy{background:var(--dark);color:white;}
+.sb-close{background:var(--bg);color:var(--mid);border:1px solid var(--border);}
+.cal-header{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
+.cal-month{font-family:'DM Serif Display',serif;font-size:20px;}
+.cal-arrows{display:flex;gap:6px;}
+.cal-arrows button{width:36px;height:36px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:16px;cursor:pointer;}
+.cal-grid{padding:0 14px 14px;}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+.cal-dow span{text-align:center;font-size:10px;font-weight:700;color:var(--mid);padding:4px 0;}
+.cal-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid transparent;cursor:pointer;}
+.cal-cell .cn{font-size:13px;font-weight:500;}
+.cal-cell .cbar{width:20px;height:3px;border-radius:2px;margin-top:3px;}
+.cal-cell:active:not(.empty){opacity:.7;}
+.cal-cell.today{border-color:var(--accent);}
+.cal-cell.selected{background:var(--dark);color:white;}
+.cal-cell.empty{pointer-events:none;}
+.legend{display:flex;gap:14px;padding:6px 18px 14px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);}
+.leg-dot{width:7px;height:7px;border-radius:50%;}
+.day-nav{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;}
+.btn-back{width:36px;height:36px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.day-nav-title{font-family:'DM Serif Display',serif;font-size:18px;flex:1;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:100;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-hdr{padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sheet-title{font-family:'DM Serif Display',serif;font-size:18px;display:flex;align-items:center;gap:8px;}
+.edit-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--yellow-bg);color:var(--yellow);}
+.btn-close{width:34px;height:34px;border:1px solid var(--border);background:none;border-radius:9px;font-size:16px;cursor:pointer;}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px;flex:1;}
+.sheet-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;padding-bottom:max(12px,env(safe-area-inset-bottom));}
+.fg{margin-bottom:15px;}
+label{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mid);margin-bottom:6px;}
+input,select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--green);background:white;}
+.room-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rpick{padding:14px;border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;}
+.rpick.active{border-color:var(--dark);background:var(--dark);color:white;}
+.rpick .rn{font-size:24px;font-weight:700;}
+.rpick .rl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.tpick{padding:10px 4px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;}
+.tpick .tt{font-size:11px;font-weight:600;}
+.tpick .tr{font-size:10px;opacity:.6;margin-top:2px;}
+.tpick.active{border-color:var(--dark);background:var(--dark);color:white;}
+.tpick.t-full{background:var(--red-bg);border-color:var(--border);}
+.tpick.t-full .tr{color:var(--red);}
+.malert{padding:11px 13px;border-radius:10px;font-size:12px;margin-bottom:12px;font-weight:500;}
+.a-ok{background:var(--green-bg);color:var(--green);border:1px solid #B0D4BC;}
+.a-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid #F0D98A;}
+.a-err{background:var(--red-bg);color:var(--red);border:1px solid #F9C0C0;}
+.btn-save{flex:1;padding:14px;background:var(--green);color:white;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-cancel{padding:14px 18px;border:1.5px solid var(--border);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
+.btn-del-bk{padding:14px 16px;border:1.5px solid var(--red);color:var(--red);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
+.no-sel{text-align:center;padding:60px 20px;color:var(--mid);}
+.no-sel .ni{font-size:48px;margin-bottom:12px;}
+/* ★ 베드 선택 UI ★ */
+.bed-picker{display:none;margin-top:8px;}
+.bed-picker.visible{display:block;}
+.bed-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.bed-btn{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:white;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.bed-btn:active{transform:scale(.95);}
+.bed-btn.active{border-color:var(--accent);background:var(--accent);color:white;}
+.bed-btn.taken{background:var(--border);color:var(--mid);opacity:.5;cursor:not-allowed;}
+.bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:10px;}
+.bed-room-label:first-child{margin-top:0;}
+</style>
+</head>
+<body>
 
-// ── 설정 ──────────────────────────────────────────────────────
-var FIREBASE_URL = "https://laurel-studio-default-rtdb.asia-southeast1.firebasedatabase.app";
-var CALENDAR_ID = "unehana0880@gmail.com"; // Acuity 연동 캘린더
-var KLOOK_SENDER = "operator@klook.com";   // 클룩 예약 확정 발신
-var KLOOK_CANCEL_SENDER = "settlement_cancel@klook.com"; // 클룩 취소 발신 (CC)
+<div class="hdr">
+  <div class="hdr-logo">Laurel <em>Studio</em></div>
+  <div class="hdr-date" id="hdrDate"></div>
+</div>
 
-// ── 트리거 설정 (처음 1회만 실행) ─────────────────────────────
-function setup() {
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    ScriptApp.deleteTrigger(triggers[i]);
-  }
-  ScriptApp.newTrigger("syncAll").timeBased().everyMinutes(5).create();
+<div class="content">
+  <div class="screen active" id="scrToday">
+    <div class="today-hdr">
+      <div class="today-hdr-title" id="todayTitle"></div>
+      <button class="btn-share" onclick="openShare()">📤 공유</button>
+    </div>
+    <div class="sync-badge">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Firebase 연결 중...</span>
+    </div>
+    <div class="today-summary" id="todaySummary"></div>
+    <div class="today-slots" id="todaySlots"></div>
+    <div style="height:14px"></div>
+  </div>
 
-  if (!PropertiesService.getScriptProperties().getProperty("lastCalSync")) {
-    PropertiesService.getScriptProperties().setProperty("lastCalSync", new Date().toISOString());
-  }
-  if (!PropertiesService.getScriptProperties().getProperty("processedKlook")) {
-    PropertiesService.getScriptProperties().setProperty("processedKlook", "[]");
-  }
-  if (!PropertiesService.getScriptProperties().getProperty("processedCancels")) {
-    PropertiesService.getScriptProperties().setProperty("processedCancels", "[]");
-  }
-  Logger.log("✅ 세팅 완료! 5분마다 자동 실행됩니다.");
+  <div class="screen" id="scrCal">
+    <div class="cal-header">
+      <div class="cal-month" id="calLabel"></div>
+      <div class="cal-arrows">
+        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="cal-cells" id="calCells"></div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>여유</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>일부 마감</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>마감</div>
+    </div>
+  </div>
+
+  <div class="screen" id="scrDay">
+    <div class="day-nav">
+      <button class="btn-back" onclick="goTab('cal')">←</button>
+      <div style="flex:1">
+        <div class="day-nav-title" id="dayTitle">날짜 선택</div>
+        <div style="font-size:11px;color:var(--mid)">시간대별 예약 현황</div>
+      </div>
+      <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
+    </div>
+    <div class="slot-list" id="slotList"></div>
+    <div style="height:14px"></div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="tab active" id="tab-today" onclick="goTab('today')"><span class="ti">☀️</span><span class="tl">오늘</span></button>
+  <button class="tab" id="tab-cal" onclick="goTab('cal')"><span class="ti">📅</span><span class="tl">캘린더</span></button>
+  <button class="tab t-plus" onclick="openModal()"><span class="ti" style="color:white;font-size:24px">+</span><span class="tl">추가</span></button>
+  <button class="tab" id="tab-day" onclick="goTab('day')"><span class="ti">📋</span><span class="tl">날짜별</span></button>
+</div>
+
+<div class="share-popup" id="sharePopup" onclick="if(event.target===this)closeShare()">
+  <div class="share-sheet">
+    <div class="share-handle"></div>
+    <div class="share-title" id="shareTitle">예약 현황 공유</div>
+    <div class="share-text" id="shareText"></div>
+    <div class="share-btns">
+      <button class="share-btn sb-copy" onclick="copyShare()">📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)</button>
+      <button class="share-btn sb-close" onclick="closeShare()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-title"><span id="sheetTitle">예약 추가</span><span class="edit-chip" id="editChip" style="display:none">수정 중</span></div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div id="sheetAlert"></div>
+      <div class="fg"><label>날짜</label><input type="date" id="mDate" onchange="onDateChange()"></div>
+      <div class="fg"><label>시간</label><div class="time-grid" id="timePicker"></div></div>
+      <div class="fg"><label>룸</label>
+        <div class="room-picker">
+          <div class="rpick" id="rp2" onclick="pickRoom(2)"><div class="rn">2</div><div class="rl">인룸</div></div>
+          <div class="rpick" id="rp4" onclick="pickRoom(4)"><div class="rn">4</div><div class="rl">인룸</div></div>
+        </div>
+      </div>
+      <div class="fg"><label>인원</label><select id="mPax" onchange="checkCap()"><option value="">룸 먼저 선택</option></select></div>
+      <!-- ★ 베드 번호 선택 ★ -->
+      <div class="fg">
+        <label>베드 번호 배정</label>
+        <div class="bed-picker" id="bedPicker">
+          <div id="bedButtons"></div>
+        </div>
+        <div id="bedHint" style="font-size:11px;color:var(--mid);margin-top:4px;">룸과 시간을 선택하면 베드를 배정할 수 있어요</div>
+      </div>
+      <div class="fg"><label>이름 (선택)</label><input type="text" id="mName" placeholder="고객 이름"></div>
+      <div class="fg"><label>언어 (선택)</label>
+        <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
+      </div>
+      <div class="fg"><label>프로그램 (선택)</label>
+        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>ORI 분석 + 케어</option><option>바디 케어</option></select>
+      </div>
+      <div class="fg"><label>예약 경로</label>
+        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>직접 방문</option><option>기타</option></select>
+      </div>
+      <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
+    </div>
+    <div class="sheet-foot" id="sheetFoot"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA0nJAcOV64dq2QT2BVSsGxis99VTA2eEI",
+  authDomain: "laurel-studio.firebaseapp.com",
+  databaseURL: "https://laurel-studio-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "laurel-studio",
+  storageBucket: "laurel-studio.firebasestorage.app",
+  messagingSenderId: "516403607342",
+  appId: "1:516403607342:web:5389cdfe397afcee1cacbf"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+var SLOTS=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+var SLOT_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
+var ROOM_CAP={2:2,4:4};
+var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web'};
+
+var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
+var mRoom=null, mSlot=null, editId=null, mBeds=[];
+
+function getTODAY(){ var n=new Date(); return fmt(n.getFullYear(),n.getMonth(),n.getDate()); }
+function fmt(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+function slotBks(date,slot){ return bookings.filter(function(b){return b.date===date&&b.slot===slot;}); }
+function roomRem(date,slot,room,excl){
+  var used=slotBks(date,slot).filter(function(b){return b.room===room&&b.id!==excl;}).reduce(function(s,b){return s+b.pax;},0);
+  return ROOM_CAP[room]-used;
+}
+function dayStatus(date){
+  var full=0;
+  SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0)full++; if(roomRem(date,s,4)===0)full++; });
+  return full===0?'none':full===SLOTS.length*2?'full':'partial';
 }
 
-// ── 메인 함수 (5분마다 실행) — 단계별 try/catch ──────────────
-function syncAll() {
-  safeRun("Acuity 예약", syncAcuityFromCalendar);
-  safeRun("Klook 예약", syncKlookFromGmail);
-  safeRun("Klook 취소", syncKlookCancelsFromGmail);
-  safeRun("Acuity 취소", syncAcuityCancelsFromGmail);
-  safeRun("Acuity 변경", syncAcuityReschedulesFromGmail);
-}
-function safeRun(label, fn) {
-  try { fn(); } catch (e) { Logger.log("❌ " + label + " 오류: " + e.message); }
+// ★ 베드 사용 현황 조회 ★
+function takenBeds(date, slot, room, exclId) {
+  var beds = [];
+  slotBks(date, slot).filter(function(b){ return b.room === room && b.id !== exclId; }).forEach(function(b){
+    if (b.beds && b.beds.length) beds = beds.concat(b.beds);
+  });
+  return beds;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 1. Acuity 예약 — 구글 캘린더에서 가져오기
-// ═══════════════════════════════════════════════════════════════
-function syncAcuityFromCalendar() {
-  var props = PropertiesService.getScriptProperties();
-  var now = new Date();
-  var endDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+// ★ 베드 선택 UI 렌더 ★
+function renderBedPicker() {
+  var picker = document.getElementById('bedPicker');
+  var hint = document.getElementById('bedHint');
+  var btnsEl = document.getElementById('bedButtons');
+  var date = document.getElementById('mDate').value;
 
-  var calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  if (!calendar) {
-    Logger.log("❌ 캘린더를 찾을 수 없음: " + CALENDAR_ID);
+  if (!mRoom || !mSlot || !date) {
+    picker.classList.remove('visible');
+    hint.textContent = '룸과 시간을 선택하면 베드를 배정할 수 있어요';
     return;
   }
 
-  var events = calendar.getEvents(now, endDate);
-  var newCount = 0;
+  picker.classList.add('visible');
+  var maxBed = mRoom; // 2인룸 = 2개, 4인룸 = 4개
+  var taken = takenBeds(date, mSlot, mRoom, editId);
+  var roomLabel = mRoom + '인룸';
+  var pax = parseInt(document.getElementById('mPax').value) || 0;
 
-  for (var i = 0; i < events.length; i++) {
-    var event = events[i];
-    var desc = event.getDescription() || "";
-    if (desc.indexOf("AcuityID=") === -1) continue;
+  var html = '<div class="bed-room-label">🛏️ ' + roomLabel + ' 베드 선택' + (pax ? ' (' + pax + '명 → ' + pax + '개 선택)' : '') + '</div>';
+  html += '<div class="bed-grid">';
+  for (var i = 1; i <= maxBed; i++) {
+    var isTaken = taken.indexOf(i) !== -1;
+    var isActive = mBeds.indexOf(i) !== -1;
+    html += '<button class="bed-btn' + (isActive ? ' active' : '') + (isTaken ? ' taken' : '') + '" onclick="toggleBed(' + i + ',' + isTaken + ')">' + i + '</button>';
+  }
+  html += '</div>';
+  btnsEl.innerHTML = html;
+  hint.textContent = taken.length ? '회색 베드는 이미 배정됨' : '';
+}
 
-    var acuityMatch = desc.match(/AcuityID=(\d+)/);
-    if (!acuityMatch) continue;
-    var acuityId = "acuity_" + acuityMatch[1];
+window.toggleBed = function(num, isTaken) {
+  if (isTaken) return;
+  var idx = mBeds.indexOf(num);
+  if (idx !== -1) { mBeds.splice(idx, 1); }
+  else { mBeds.push(num); }
+  mBeds.sort();
+  renderBedPicker();
+};
 
-    var existing = firebaseGet("bookings/" + acuityId);
-    if (existing) continue;
+function setSyncStatus(status) {
+  var dot=document.getElementById('syncDot'), label=document.getElementById('syncLabel');
+  if(status==='connected'){ dot.className='sync-dot connected'; label.textContent='실시간 동기화 중'; }
+  else if(status==='syncing'){ dot.className='sync-dot syncing'; label.textContent='저장 중...'; }
+  else if(status==='error'){ dot.className='sync-dot error'; label.textContent='연결 오류 — 재시도 중'; }
+  else { dot.className='sync-dot'; label.textContent='Firebase 연결 중...'; }
+}
 
-    var booking = parseAcuityEvent(event, desc, acuityId);
-    if (booking) {
-      if (firebaseSet("bookings/" + acuityId, booking)) {
-        newCount++;
-        Logger.log("✅ Acuity 예약 추가: " + booking.name + " / " + booking.date + " " + booking.slot);
-      }
+onValue(ref(db,'bookings'),(snap)=>{
+  const data=snap.val();
+  bookings=data?Object.values(data):[];
+  // ── 데이터 정규화: pax 숫자 보장 + slot을 "HH:00"으로 통일 ──
+  bookings.forEach(function(b){
+    b.pax = parseInt(b.pax) || 1;                  // 깨진 pax → 1
+    if (b.slot) {
+      var hh = String(b.slot).match(/(\d{1,2})/);  // "13:00:00","13시" 등에서 시 추출
+      if (hh) b.slot = String(parseInt(hh[1])).padStart(2,'0') + ':00';
     }
-  }
+  });
+  renderAll();
+  setSyncStatus('connected');
+});
 
-  props.setProperty("lastCalSync", now.toISOString());
-  if (newCount > 0) Logger.log("📅 Acuity: " + newCount + "건 새로 추가");
+async function saveToFirebase(bk){ setSyncStatus('syncing'); await set(ref(db,'bookings/'+bk.id),bk); }
+async function deleteFromFirebase(id){ setSyncStatus('syncing'); await remove(ref(db,'bookings/'+id)); }
+
+function renderAll(){ renderCal(); renderToday(); if(selDate) renderDay(); }
+
+function goTab(tab){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  ['today','cal','day'].forEach(function(t){ var el=document.getElementById('tab-'+t); if(el)el.classList.remove('active'); });
+  if(tab==='today'){ document.getElementById('scrToday').classList.add('active'); document.getElementById('tab-today').classList.add('active'); renderToday(); }
+  if(tab==='cal'){ document.getElementById('scrCal').classList.add('active'); document.getElementById('tab-cal').classList.add('active'); }
+  if(tab==='day'){ document.getElementById('scrDay').classList.add('active'); document.getElementById('tab-day').classList.add('active'); renderDay(); }
 }
 
-function parseAcuityEvent(event, desc, id) {
-  try {
-    var title = event.getTitle() || "";
-    var startTime = event.getStartTime();
+function renderToday(){
+  var date=getTODAY(), now=new Date();
+  document.getElementById('todayTitle').textContent=(now.getMonth()+1)+'월 '+now.getDate()+'일 오늘';
+  var totalPax=bookings.filter(function(b){return b.date===date;}).reduce(function(s,b){return s+b.pax;},0);
+  var totalSlots=SLOTS.filter(function(s){return slotBks(date,s).length>0;}).length;
+  var fullSlots=0;
+  SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0&&roomRem(date,s,4)===0) fullSlots++; });
+  document.getElementById('todaySummary').innerHTML='<div class="sum-card"><div class="sum-num" style="color:var(--room2)">'+totalPax+'</div><div class="sum-label">총 고객 수</div></div><div class="sum-card"><div class="sum-num" style="color:var(--green)">'+totalSlots+'</div><div class="sum-label">예약 슬롯</div></div><div class="sum-card"><div class="sum-num" style="color:var(--red)">'+fullSlots+'</div><div class="sum-label">마감 슬롯</div></div>';
+  var slotHtml=SLOTS.map(function(slot,i){return slotCardHTML(date,slot,i);}).join('');
+  // ── 슬롯에 안 잡히는(형식 깨진) 오늘 예약 표시 ──
+  var orphans=bookings.filter(function(b){return b.date===date && SLOTS.indexOf(b.slot)===-1;});
+  if(orphans.length){
+    slotHtml+='<div class="ts-card" style="border:2px solid var(--red)"><div class="ts-hdr"><div class="ts-time">⚠️ 시간 미확인 ('+orphans.length+')</div><div class="ts-badge ts-full">확인 필요</div></div><div style="padding:6px 12px 10px">'
+      +orphans.map(function(b){return bkMini(b)+'<div style="font-size:11px;color:var(--mid);margin:-4px 0 10px 4px">raw slot: "'+(b.slot===undefined?'(없음)':b.slot)+'" · id: '+b.id+'</div>';}).join('')
+      +'</div></div>';
+  }
+  document.getElementById('todaySlots').innerHTML=slotHtml;
+}
 
-    var date = Utilities.formatDate(startTime, "Asia/Seoul", "yyyy-MM-dd");
-    var hour = Utilities.formatDate(startTime, "Asia/Seoul", "HH");
-    var slot = hour + ":00";
-
-    var name = "";
-    var titleParts = title.split(":");
-    if (titleParts.length > 0) name = titleParts[0].trim();
-
-    var program = "";
-    if (title.indexOf("PREMIUM") !== -1 || title.indexOf("Premium") !== -1) program = "프리미엄 케어 60분";
-    else if (title.indexOf("BASIC") !== -1 || title.indexOf("Basic") !== -1) program = "기본 케어 50분";
-    else if (title.indexOf("ORI") !== -1) program = "ORI 분석 + 케어";
-    else if (title.indexOf("Fan") !== -1 || title.indexOf("fan") !== -1) program = "부채 만들기";
-
-    var pax = 1;
-    var paxMatch = desc.match(/How many people[^:]*:\s*(\d+)/i);
-    if (paxMatch) pax = parseInt(paxMatch[1]);
-
-    var lang = "";
-    var langMatch = desc.match(/language[^:]*:\s*(\w+)/i);
-    if (langMatch) lang = langMatch[1];
-
-    var email = "";
-    var emailMatch = desc.match(/Email:\s*([^\s\n]+)/);
-    if (emailMatch) email = emailMatch[1];
-
-    var phone = "";
-    var phoneMatch = desc.match(/Phone:\s*([^\s\n]+)/);
-    if (phoneMatch) phone = phoneMatch[1];
-
-    var note = "";
-    var noteMatch = desc.match(/anything else[^:]*:\s*([^\n]+)/i);
-    if (noteMatch && noteMatch[1].trim()) note = noteMatch[1].trim();
-
-    return {
-      id: id, date: date, slot: slot, room: 4, pax: pax, name: name,
-      lang: lang, program: program, source: "Acuity",
-      note: note + (email ? " | " + email : "") + (phone ? " | " + phone : ""),
-      beds: [], autoSync: "acuity", syncedAt: new Date().toISOString()
-    };
-  } catch (e) {
-    Logger.log("⚠️ Acuity 파싱 실패: " + e.message);
-    return null;
+var MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+function changeMonth(d){ selM+=d; if(selM>11){selM=0;selY++;} if(selM<0){selM=11;selY--;} renderCal(); }
+function renderCal(){
+  document.getElementById('calLabel').textContent=selY+'년 '+MO[selM];
+  var cells=document.getElementById('calCells'); cells.innerHTML='';
+  var first=new Date(selY,selM,1).getDay(), days=new Date(selY,selM+1,0).getDate(), today=getTODAY();
+  for(var i=0;i<first;i++){ var el=document.createElement('div'); el.className='cal-cell empty'; cells.appendChild(el); }
+  for(var d=1;d<=days;d++){
+    var key=fmt(selY,selM,d), st=dayStatus(key), hasB=bookings.some(function(b){return b.date===key;});
+    var col=st==='full'?'var(--red)':st==='partial'?'var(--accent)':'var(--green)';
+    var el=document.createElement('div');
+    el.className='cal-cell'+(key===today?' today':'')+(selDate===key?' selected':'');
+    el.innerHTML='<div class="cn">'+d+'</div>'+(hasB?'<div class="cbar" style="background:'+col+'"></div>':'');
+    (function(k){ el.onclick=function(){selectDate(k);}; })(key);
+    cells.appendChild(el);
   }
 }
+function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
 
-// ═══════════════════════════════════════════════════════════════
-// 2. Klook 예약 확정 — Gmail에서 가져오기
-//    ★ 저장 성공할 때만 processedKlook 기록 (실패 시 다음에 재시도)
-// ═══════════════════════════════════════════════════════════════
-function syncKlookFromGmail() {
-  var props = PropertiesService.getScriptProperties();
-  var processedList = JSON.parse(props.getProperty("processedKlook") || "[]");
-
-  var query = 'from:' + KLOOK_SENDER + ' subject:"예약내역 확정" newer_than:7d';
-  var threads = GmailApp.search(query, 0, 20);
-  var newCount = 0;
-
-  for (var t = 0; t < threads.length; t++) {
-    var messages = threads[t].getMessages();
-    for (var m = 0; m < messages.length; m++) {
-      var msg = messages[m];
-      var msgId = msg.getId();
-      if (processedList.indexOf(msgId) !== -1) continue;
-
-      var body = msg.getPlainBody() || msg.getBody();
-      var subject = msg.getSubject() || "";
-      if (subject.indexOf("예약내역 확정") === -1 && subject.indexOf("Klook") === -1) continue;
-
-      var booking = parseKlookEmail(body, subject, msgId);
-      if (!booking) {
-        Logger.log("⚠️ Klook 파싱 실패(재시도 예정): " + subject);
-        continue; // 처리완료로 안 찍음 → 다음 실행 때 재시도
-      }
-
-      var existing = firebaseGet("bookings/" + booking.id);
-      if (existing) { processedList.push(msgId); continue; }
-
-      if (firebaseSet("bookings/" + booking.id, booking)) {
-        processedList.push(msgId);
-        newCount++;
-        Logger.log("✅ Klook 예약 추가: " + booking.name + " / " + booking.date + " " + booking.slot);
-      } else {
-        Logger.log("⚠️ Klook 저장 실패(재시도 예정): " + subject);
-      }
-    }
-  }
-
-  if (processedList.length > 200) processedList = processedList.slice(-200);
-  props.setProperty("processedKlook", JSON.stringify(processedList));
-  if (newCount > 0) Logger.log("🟠 Klook: " + newCount + "건 새로 추가");
+function renderDay(){
+  if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">📅</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
+  var parts=selDate.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var dt=new Date(y,m-1,d), wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  document.getElementById('dayTitle').textContent=m+'월 '+d+'일 ('+wds[dt.getDay()]+')';
+  document.getElementById('slotList').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(selDate,slot,i);}).join('');
 }
 
-// 예약 확정 메일 파서 (정상 — id/slot/pax 모두 채움)
-function parseKlookEmail(body, subject, msgId) {
-  try {
-    var refMatch = body.match(/(?:예약 확인 ID|Booking reference ID)[:\s]*([A-Z0-9]+)/i);
-    if (!refMatch) refMatch = subject.match(/([A-Z]{3}\d{6,})/);
-    var refId = refMatch ? refMatch[1] : ("klook_" + msgId.substring(0, 10));
-    var bookingId = "klook_" + refId;
-
-    var date = "";
-    var dateMatch = body.match(/요청 날짜[:\s]*(\d{4}-\d{2}-\d{2})/);
-    if (!dateMatch) {
-      dateMatch = body.match(/Date\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i);
-      if (dateMatch) {
-        var months = {Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",Jul:"07",Aug:"08",Sep:"09",Oct:"10",Nov:"11",Dec:"12"};
-        date = dateMatch[3] + "-" + months[dateMatch[2]] + "-" + String(parseInt(dateMatch[1])).padStart(2,"0");
-        dateMatch = [null, date];
-      }
-    }
-    if (!dateMatch) dateMatch = subject.match(/(\d{4}-\d{2}-\d{2})/);
-    if (dateMatch) date = dateMatch[1] || dateMatch[0];
-    if (!date) return null;
-
-    var slot = "10:00";
-    var timeMatch = body.match(/요청 시간[:\s]*(\d{1,2}:\d{2})/);
-    if (!timeMatch) {
-      timeMatch = body.match(/(\d{1,2}:\d{2}:\d{2})/);
-      if (!timeMatch) timeMatch = body.match(/(\d{1,2}:\d{2})/);
-    }
-    if (timeMatch) {
-      var h = parseInt(timeMatch[1].split(":")[0]);
-      slot = String(h).padStart(2, "0") + ":00";
-    }
-    if (slot === "10:00") {
-      var subjTimeMatch = subject.match(/(\d{1,2}:\d{2}:\d{2})/);
-      if (subjTimeMatch) {
-        var sh = parseInt(subjTimeMatch[1].split(":")[0]);
-        slot = String(sh).padStart(2, "0") + ":00";
-      }
-    }
-
-    var name = "";
-    var nameMatch = body.match(/대표 예약자명[:\s]*(?:\(\))?([^\n]+)/);
-    if (!nameMatch) nameMatch = body.match(/Lead participant[:\s]*([^\n]+)/i);
-    if (nameMatch) name = nameMatch[1].trim();
-
-    var pax = 1;
-    var paxMatch = body.match(/여행자[:\s]*(\d+)\s*x/);
-    if (!paxMatch) paxMatch = body.match(/Quantity[:\s]*(\d+)/i);
-    if (paxMatch) pax = parseInt(paxMatch[1]);
-
-    var email = "";
-    var emailMatch = body.match(/이메일 주소[:\s]*([^\s\n]+@[^\s\n]+)/);
-    if (!emailMatch) emailMatch = body.match(/Email[:\s]*([^\s\n]+@[^\s\n]+)/i);
-    if (emailMatch) email = emailMatch[1].trim();
-
-    var lang = "";
-    var langMatch = body.match(/Preferred language[:\s]*(\w+)/i);
-    if (langMatch) lang = langMatch[1];
-
-    var program = "";
-    if (body.indexOf("Premium") !== -1 || body.indexOf("프리미엄") !== -1 || body.indexOf("60") !== -1) program = "프리미엄 케어 60분";
-    else if (body.indexOf("50-Min") !== -1 || body.indexOf("50분") !== -1 || body.indexOf("Basic") !== -1) program = "기본 케어 50분";
-    else if (body.indexOf("Fan") !== -1 || body.indexOf("부채") !== -1) program = "부채 만들기";
-
-    return {
-      id: bookingId, date: date, slot: slot, room: 4, pax: pax, name: name,
-      lang: lang || "", program: program, source: "Klook",
-      note: (email ? email : "") + " | Ref:" + refId,
-      beds: [], autoSync: "klook", syncedAt: new Date().toISOString()
-    };
-  } catch (e) {
-    Logger.log("⚠️ Klook 파싱 실패: " + e.message);
-    return null;
-  }
+function slotCardHTML(date,slot,i){
+  var r2=roomRem(date,slot,2),r4=roomRem(date,slot,4),rem=r2+r4;
+  var sc=rem===0?'ts-full':rem<4?'ts-partial':'ts-open', sl=rem===0?'마감':rem<3?'잔여 적음':'예약 가능';
+  var u2=ROOM_CAP[2]-r2, u4=ROOM_CAP[4]-r4;
+  var b2=slotBks(date,slot).filter(function(b){return b.room===2;}), b4=slotBks(date,slot).filter(function(b){return b.room===4;});
+  return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/6</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms"><div class="ts-room"><div class="ts-rlabel"><span class="rb rb2">2인룸</span> '+r2+'/2</div><div class="pips">'+[1,2].map(function(n){return '<div class="pip '+(n<=u2?'on2':'')+'"></div>';}).join('')+'</div>'+(b2.length?b2.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div><div class="ts-divider"></div><div class="ts-room"><div class="ts-rlabel"><span class="rb rb4">4인룸</span> '+r4+'/4</div><div class="pips">'+[1,2,3,4].map(function(n){return '<div class="pip '+(n<=u4?'on4':'')+'"></div>';}).join('')+'</div>'+(b4.length?b4.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div></div></div>';
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 3. Klook 취소 / 부분 취소 감지
-// ═══════════════════════════════════════════════════════════════
-function syncKlookCancelsFromGmail() {
-  var props = PropertiesService.getScriptProperties();
-  var processedCancels = JSON.parse(props.getProperty("processedCancels") || "[]");
-
-  var queryCancelFull = 'subject:"클룩 확정된 예약 취소" newer_than:7d';
-  var queryCancelPartial = 'subject:"클룩 부분 취소" newer_than:7d';
-
-  var cancelCount = 0, updateCount = 0;
-
-  // ── 전체 취소 ──
-  var threads = GmailApp.search(queryCancelFull, 0, 20);
-  for (var t = 0; t < threads.length; t++) {
-    var messages = threads[t].getMessages();
-    for (var m = 0; m < messages.length; m++) {
-      var msg = messages[m];
-      var msgId = msg.getId();
-      if (processedCancels.indexOf(msgId) !== -1) continue;
-
-      var body = msg.getPlainBody() || msg.getBody();
-      var refMatch = body.match(/예약 확인 ID[:\s]*([A-Z0-9]+)/i);
-      if (refMatch) {
-        var bookingId = "klook_" + refMatch[1];
-        var existing = firebaseGet("bookings/" + bookingId);
-        if (existing) {
-          firebaseDelete("bookings/" + bookingId);
-          cancelCount++;
-          Logger.log("🗑️ Klook 전체 취소: " + (existing.name || bookingId) + " / " + existing.date + " " + existing.slot);
-        } else {
-          var fallback = findKlookBookingByDetails(body);
-          if (fallback) {
-            firebaseDelete("bookings/" + fallback.id);
-            cancelCount++;
-            Logger.log("🗑️ Klook 전체 취소 (이름매칭): " + fallback.name + " / " + fallback.date);
-          }
-        }
-      }
-      processedCancels.push(msgId);
-    }
-  }
-
-  // ── 부분 취소 ──
-  threads = GmailApp.search(queryCancelPartial, 0, 20);
-  for (var t = 0; t < threads.length; t++) {
-    var messages = threads[t].getMessages();
-    for (var m = 0; m < messages.length; m++) {
-      var msg = messages[m];
-      var msgId = msg.getId();
-      if (processedCancels.indexOf(msgId) !== -1) continue;
-
-      var body = msg.getPlainBody() || msg.getBody();
-      var refMatch = body.match(/예약 확인 ID[:\s]*([A-Z0-9]+)/i);
-      if (refMatch) {
-        var bookingId = "klook_" + refMatch[1];
-        var existing = firebaseGet("bookings/" + bookingId);
-        var remainMatch = body.match(/남은 수량[:\s]*(\d+)\s*x/i);
-        var cancelledMatch = body.match(/취소된 수량[:\s]*(\d+)\s*x/i);
-
-        if (existing && remainMatch) {
-          var newPax = parseInt(remainMatch[1]);
-          if (newPax <= 0) {
-            firebaseDelete("bookings/" + bookingId);
-            cancelCount++;
-            Logger.log("🗑️ Klook 부분→전체 취소: " + existing.name + " (남은 수량 0)");
-          } else {
-            existing.pax = newPax;
-            existing.note = (existing.note || "") + " | ⚠️부분취소: " + (cancelledMatch ? cancelledMatch[1] + "명 취소, " : "") + newPax + "명 남음";
-            existing.syncedAt = new Date().toISOString();
-            firebaseSet("bookings/" + bookingId, existing);
-            updateCount++;
-            Logger.log("✏️ Klook 부분 취소: " + existing.name + " → " + newPax + "명으로 변경");
-          }
-        } else if (!existing) {
-          var fallback = findKlookBookingByDetails(body);
-          if (fallback && remainMatch) {
-            var newPax2 = parseInt(remainMatch[1]);
-            if (newPax2 <= 0) {
-              firebaseDelete("bookings/" + fallback.id);
-              cancelCount++;
-            } else {
-              fallback.pax = newPax2;
-              fallback.note = (fallback.note || "") + " | ⚠️부분취소: " + newPax2 + "명 남음";
-              fallback.syncedAt = new Date().toISOString();
-              firebaseSet("bookings/" + fallback.id, fallback);
-              updateCount++;
-            }
-          }
-        }
-      }
-      processedCancels.push(msgId);
-    }
-  }
-
-  if (processedCancels.length > 300) processedCancels = processedCancels.slice(-300);
-  props.setProperty("processedCancels", JSON.stringify(processedCancels));
-  if (cancelCount > 0) Logger.log("🟠 Klook 취소: " + cancelCount + "건 삭제");
-  if (updateCount > 0) Logger.log("🟠 Klook 부분취소: " + updateCount + "건 수정");
+// ★ 베드 번호 표시 추가 ★
+function bkMini(b){
+  var sc=SRC_CLS[b.source]||'';
+  var bedTag = b.beds && b.beds.length ? '<span class="btag btag-bed">🛏️ ' + b.beds.join(',') + '번</span>' : '';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div><div class="bk-tags">'+bedTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
 }
 
-function findKlookBookingByDetails(body) {
-  var nameMatch = body.match(/대표 예약자명[:\s]*(?:\(\))?([^\n]+)/);
-  var dateMatch = body.match(/요청 날짜[:\s]*(\d{4}-\d{2}-\d{2})/);
-  var timeMatch = body.match(/요청 시간[:\s]*(\d{1,2}:\d{2})/);
-  if (!nameMatch || !dateMatch) return null;
-
-  var searchName = nameMatch[1].trim().toLowerCase();
-  var searchDate = dateMatch[1];
-  var searchSlot = "";
-  if (timeMatch) {
-    var h = parseInt(timeMatch[1].split(":")[0]);
-    searchSlot = String(h).padStart(2, "0") + ":00";
-  }
-
-  var allBookings = firebaseGet("bookings");
-  if (!allBookings) return null;
-
-  var keys = Object.keys(allBookings);
-  for (var i = 0; i < keys.length; i++) {
-    var bk = allBookings[keys[i]];
-    if (bk.source !== "Klook") continue;
-    if (bk.date !== searchDate) continue;
-    if (searchSlot && bk.slot !== searchSlot) continue;
-    if (bk.name && bk.name.toLowerCase().indexOf(searchName) !== -1) return bk;
-    var nameParts = searchName.split(/\s+/);
-    for (var j = 0; j < nameParts.length; j++) {
-      if (nameParts[j].length > 2 && bk.name && bk.name.toLowerCase().indexOf(nameParts[j]) !== -1) return bk;
-    }
-  }
-  return null;
+// ★ 공유 텍스트에 베드 번호 포함 ★
+function buildShareText(date){
+  var parts=date.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var dt=new Date(y,m-1,d), wds=['일','월','화','수','목','금','토'];
+  var txt='🌿 Laurel Studio 예약 현황\n📅 '+m+'월 '+d+'일 ('+wds[dt.getDay()]+')\n'+'─'.repeat(22)+'\n';
+  var totalPax=0;
+  SLOTS.forEach(function(slot,i){
+    var bks=slotBks(date,slot); if(!bks.length) return;
+    var r2=roomRem(date,slot,2), r4=roomRem(date,slot,4);
+    txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r2+r4)+'/6)\n';
+    bks.forEach(function(b){ totalPax+=b.pax;
+      var bedStr = b.beds && b.beds.length ? ' | 🛏️' + b.beds.join(',') + '번' : '';
+      txt+='  '+(b.room===2?'🔵2인':'🟣4인')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+'\n';
+    });
+  });
+  txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
+  return txt;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 4. Acuity 취소 감지 (Gmail)
-// ═══════════════════════════════════════════════════════════════
-function syncAcuityCancelsFromGmail() {
-  var props = PropertiesService.getScriptProperties();
-  var processedCancels = JSON.parse(props.getProperty("processedCancels") || "[]");
-
-  var query = 'from:acuityscheduling.com subject:"Appointment Cancelled" newer_than:7d';
-  var threads = GmailApp.search(query, 0, 20);
-  var cancelCount = 0;
-
-  for (var t = 0; t < threads.length; t++) {
-    var messages = threads[t].getMessages();
-    for (var m = 0; m < messages.length; m++) {
-      var msg = messages[m];
-      var msgId = msg.getId();
-      if (processedCancels.indexOf(msgId) !== -1) continue;
-
-      var subject = msg.getSubject() || "";
-      var cancelInfo = parseAcuityCancelSubject(subject);
-      if (cancelInfo) {
-        var found = findAcuityBooking(cancelInfo.name, cancelInfo.date, cancelInfo.slot);
-        if (found) {
-          firebaseDelete("bookings/" + found.id);
-          cancelCount++;
-          Logger.log("🗑️ Acuity 취소: " + found.name + " / " + found.date + " " + found.slot);
-        }
-      }
-      processedCancels.push(msgId);
-    }
-  }
-
-  props.setProperty("processedCancels", JSON.stringify(processedCancels));
-  if (cancelCount > 0) Logger.log("📅 Acuity 취소: " + cancelCount + "건 삭제");
+var shareDate=null;
+function openShare(date){ shareDate=date||getTODAY(); var parts=shareDate.split('-'); document.getElementById('shareTitle').textContent=parts[1]+'월 '+parts[2]+'일 예약 현황 공유'; document.getElementById('shareText').textContent=buildShareText(shareDate); document.getElementById('sharePopup').classList.add('open'); }
+function closeShare(){ document.getElementById('sharePopup').classList.remove('open'); }
+function copyShare(){
+  var txt=document.getElementById('shareText').textContent, btn=document.querySelector('.sb-copy');
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).catch(function(){}); }
+  else{ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  btn.textContent='✅ 복사됐어요!';
+  setTimeout(function(){ btn.textContent='📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)'; },2000);
 }
 
-function parseAcuityCancelSubject(subject) {
-  var match = subject.match(/Appointment Cancelled:\s*(.+?)\s+on\s+\w+,\s+(\w+)\s+(\d{1,2}),\s+(\d{4})\s+(\d{1,2}:\d{2})/i);
-  if (!match) return null;
+function openModal(date,slot){
+  editId=null; mRoom=null; mSlot=slot||null; mBeds=[];
+  document.getElementById('sheetTitle').textContent='예약 추가';
+  document.getElementById('editChip').style.display='none';
+  document.getElementById('sheetFoot').innerHTML='<button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
+  resetForm(date||selDate||getTODAY());
+  document.getElementById('overlay').classList.add('open');
+  if(slot){ setTimeout(function(){ var el=document.querySelector('.tpick[data-s="'+slot+'"]'); if(el&&!el.classList.contains('t-full'))el.click(); },60); }
+}
+function openEdit(id){
+  var b=bookings.find(function(x){return x.id===id;}); if(!b) return;
+  editId=id; mRoom=b.room; mSlot=b.slot; mBeds=b.beds?b.beds.slice():[];
+  document.getElementById('sheetTitle').textContent='예약 수정';
+  document.getElementById('editChip').style.display='inline-flex';
+  document.getElementById('sheetFoot').innerHTML='<button class="btn-del-bk" onclick="delB(\''+id+'\',true)">삭제</button><button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
+  document.getElementById('mDate').value=b.date; document.getElementById('mName').value=b.name||'';
+  document.getElementById('mLang').value=b.lang||''; document.getElementById('mProgram').value=b.program||'';
+  document.getElementById('mSource').value=b.source||''; document.getElementById('mNote').value=b.note||'';
+  document.getElementById('sheetAlert').innerHTML='';
+  renderTimePicker(b.slot);
+  document.getElementById('rp2').className='rpick'+(b.room===2?' active':'');
+  document.getElementById('rp4').className='rpick'+(b.room===4?' active':'');
+  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
+  for(var i=1;i<=b.room;i++) pax.innerHTML+='<option value="'+i+'"'+(i===b.pax?' selected':'')+'>'+i+'명</option>';
+  checkCap(); renderBedPicker(); document.getElementById('overlay').classList.add('open');
+}
+function resetForm(date){
+  document.getElementById('mDate').value=date; document.getElementById('mName').value=''; document.getElementById('mNote').value='';
+  document.getElementById('mPax').innerHTML='<option value="">룸 먼저 선택</option>';
+  document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0; document.getElementById('mSource').selectedIndex=0;
+  document.getElementById('sheetAlert').innerHTML='';
+  document.getElementById('rp2').className='rpick'; document.getElementById('rp4').className='rpick';
+  mBeds=[];
+  renderTimePicker(); renderBedPicker();
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; mBeds=[]; }
 
-  var months = {
-    January:"01",February:"02",March:"03",April:"04",May:"05",June:"06",
-    July:"07",August:"08",September:"09",October:"10",November:"11",December:"12",
-    Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",
-    Jul:"07",Aug:"08",Sep:"09",Oct:"10",Nov:"11",Dec:"12"
-  };
-  var name = match[1].trim();
-  var month = months[match[2]] || "01";
-  var date = match[4] + "-" + month + "-" + String(parseInt(match[3])).padStart(2, "0");
-  var h = parseInt(match[5].split(":")[0]);
-  var slot = String(h).padStart(2, "0") + ":00";
-  return { name: name, date: date, slot: slot };
+function renderTimePicker(active){
+  var date=document.getElementById('mDate').value, act=active||mSlot;
+  document.getElementById('timePicker').innerHTML=SLOTS.map(function(s,i){
+    var r2=date?roomRem(date,s,2,editId):ROOM_CAP[2], r4=date?roomRem(date,s,4,editId):ROOM_CAP[4], full=r2===0&&r4===0;
+    return '<div class="tpick'+(full?' t-full':'')+(act===s?' active':'')+'" data-s="'+s+'" onclick="pickSlot(\''+s+'\','+(full?'true':'false')+')"><div class="tt">'+SLOT_LBL[i]+'</div><div class="tr">'+(full?'마감':'잔'+(r2+r4))+'</div></div>';
+  }).join('');
+}
+function pickSlot(s,full){ if(full&&!editId)return; mSlot=s; mBeds=[]; document.querySelectorAll('.tpick').forEach(function(el){el.classList.toggle('active',el.dataset.s===s);}); checkCap(); renderBedPicker(); }
+function pickRoom(n){
+  mRoom=n; mBeds=[];
+  document.getElementById('rp2').className='rpick'+(n===2?' active':'');
+  document.getElementById('rp4').className='rpick'+(n===4?' active':'');
+  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
+  for(var i=1;i<=n;i++) pax.innerHTML+='<option value="'+i+'">'+i+'명</option>';
+  checkCap(); renderBedPicker();
+}
+function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; mBeds=[]; renderTimePicker(); checkCap(); renderBedPicker(); }
+function checkCap(){
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
+  if(!date||!mRoom||!mSlot||!pax){al.innerHTML='';return;}
+  var rem=roomRem(date,mSlot,mRoom,editId);
+  if(rem===0) al.innerHTML='<div class="malert a-err">⚠️ '+mRoom+'인룸이 이 시간에 마감됐어요</div>';
+  else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+mRoom+'인룸에 '+rem+'자리만 남아요</div>';
+  else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
+  renderBedPicker();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 5. Acuity 예약 변경 감지 (Gmail)
-// ═══════════════════════════════════════════════════════════════
-function syncAcuityReschedulesFromGmail() {
-  var props = PropertiesService.getScriptProperties();
-  var processedCancels = JSON.parse(props.getProperty("processedCancels") || "[]");
-
-  var query = 'from:acuityscheduling.com subject:"Appointment Rescheduled" newer_than:7d';
-  var threads = GmailApp.search(query, 0, 20);
-  var updateCount = 0;
-
-  for (var t = 0; t < threads.length; t++) {
-    var messages = threads[t].getMessages();
-    for (var m = 0; m < messages.length; m++) {
-      var msg = messages[m];
-      var msgId = msg.getId();
-      if (processedCancels.indexOf(msgId) !== -1) continue;
-
-      var subject = msg.getSubject() || "";
-      var reschedInfo = parseAcuityRescheduleSubject(subject);
-      if (reschedInfo) {
-        var found = findAcuityBooking(reschedInfo.name, reschedInfo.oldDate, reschedInfo.oldSlot);
-        if (!found) found = findAcuityBooking(reschedInfo.name, reschedInfo.newDate, reschedInfo.newSlot);
-        if (!found) found = findAcuityBookingByName(reschedInfo.name);
-        if (found) {
-          found.date = reschedInfo.newDate;
-          found.slot = reschedInfo.newSlot;
-          found.note = (found.note || "") + " | 📅변경: " + reschedInfo.oldDate + " " + reschedInfo.oldSlot + " → " + reschedInfo.newDate + " " + reschedInfo.newSlot;
-          found.syncedAt = new Date().toISOString();
-          firebaseSet("bookings/" + found.id, found);
-          updateCount++;
-          Logger.log("✏️ Acuity 변경: " + found.name + " → " + reschedInfo.newDate + " " + reschedInfo.newSlot);
-        }
-      }
-      processedCancels.push(msgId);
-    }
-  }
-
-  props.setProperty("processedCancels", JSON.stringify(processedCancels));
-  if (updateCount > 0) Logger.log("📅 Acuity 변경: " + updateCount + "건 수정");
+async function saveB(){
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
+  if(!date){al.innerHTML='<div class="malert a-err">날짜를 선택해주세요</div>';return;}
+  if(!mSlot){al.innerHTML='<div class="malert a-err">시간을 선택해주세요</div>';return;}
+  if(!mRoom){al.innerHTML='<div class="malert a-err">룸을 선택해주세요</div>';return;}
+  if(!pax){al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>';return;}
+  var rem=roomRem(date,mSlot,mRoom,editId);
+  if(pax>rem){al.innerHTML='<div class="malert a-err">'+mRoom+'인룸 잔여('+rem+')를 초과해요</div>';return;}
+  var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,
+    beds:mBeds.length?mBeds:[],
+    name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,
+    program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,
+    note:document.getElementById('mNote').value.trim()};
+  await saveToFirebase(bk);
+  closeModal();
 }
 
-function parseAcuityRescheduleSubject(subject) {
-  var match = subject.match(/Appointment Rescheduled:\s*(.+?)\s+now at\s+\w+,\s+(\w+)\s+(\d{1,2}),\s+(\d{4})\s+(\d{1,2}:\d{2})\s+KST\s+\(was\s+(\w+)\s+(\d{1,2}),\s+(\d{4})\s+(\d{1,2}:\d{2})\)/i);
-  if (!match) return null;
-
-  var months = {
-    January:"01",February:"02",March:"03",April:"04",May:"05",June:"06",
-    July:"07",August:"08",September:"09",October:"10",November:"11",December:"12",
-    Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",
-    Jul:"07",Aug:"08",Sep:"09",Oct:"10",Nov:"11",Dec:"12"
-  };
-  var name = match[1].trim();
-  var newMonth = months[match[2]] || "01";
-  var newDate = match[4] + "-" + newMonth + "-" + String(parseInt(match[3])).padStart(2, "0");
-  var newH = parseInt(match[5].split(":")[0]);
-  var newSlot = String(newH).padStart(2, "0") + ":00";
-  var oldMonth = months[match[6]] || "01";
-  var oldDate = match[8] + "-" + oldMonth + "-" + String(parseInt(match[7])).padStart(2, "0");
-  var oldH = parseInt(match[9].split(":")[0]);
-  var oldSlot = String(oldH).padStart(2, "0") + ":00";
-  return { name: name, newDate: newDate, newSlot: newSlot, oldDate: oldDate, oldSlot: oldSlot };
+async function delB(id,fromModal){
+  if(!confirm('이 예약을 삭제할까요?'))return;
+  await deleteFromFirebase(id);
+  if(fromModal) closeModal();
 }
 
-// ── Firebase에서 Acuity 예약 찾기 (공통 헬퍼) ────────────────
-function findAcuityBooking(name, date, slot) {
-  var allBookings = firebaseGet("bookings");
-  if (!allBookings) return null;
-  var searchName = name.toLowerCase();
-  var keys = Object.keys(allBookings);
-  for (var i = 0; i < keys.length; i++) {
-    var bk = allBookings[keys[i]];
-    if (bk.source !== "Acuity") continue;
-    if (bk.date !== date) continue;
-    if (slot && bk.slot !== slot) continue;
-    if (bk.name && bk.name.toLowerCase().indexOf(searchName) !== -1) return bk;
-    var nameParts = searchName.split(/\s+/);
-    for (var j = 0; j < nameParts.length; j++) {
-      if (nameParts[j].length > 2 && bk.name && bk.name.toLowerCase().indexOf(nameParts[j]) !== -1) return bk;
-    }
-  }
-  return null;
-}
+window.goTab=goTab; window.openModal=openModal; window.openEdit=openEdit;
+window.closeModal=closeModal; window.saveB=saveB; window.delB=delB;
+window.pickRoom=pickRoom; window.pickSlot=pickSlot; window.onDateChange=onDateChange;
+window.checkCap=checkCap; window.changeMonth=changeMonth; window.selectDate=selectDate;
+window.openShare=openShare; window.closeShare=closeShare; window.copyShare=copyShare;
+window.renderTimePicker=renderTimePicker;
 
-function findAcuityBookingByName(name) {
-  var allBookings = firebaseGet("bookings");
-  if (!allBookings) return null;
-  var searchName = name.toLowerCase();
-  var keys = Object.keys(allBookings);
-  var candidates = [];
-  for (var i = 0; i < keys.length; i++) {
-    var bk = allBookings[keys[i]];
-    if (bk.source !== "Acuity") continue;
-    if (bk.name && bk.name.toLowerCase().indexOf(searchName) !== -1) candidates.push(bk);
-  }
-  if (candidates.length === 0) return null;
-  candidates.sort(function(a, b) { return (b.syncedAt || "").localeCompare(a.syncedAt || ""); });
-  return candidates[0];
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Firebase 연동 함수 — 저장 시 HTTP 응답코드 검증
-// ═══════════════════════════════════════════════════════════════
-function firebaseGet(path) {
-  var url = FIREBASE_URL + "/" + path + ".json";
-  try {
-    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-    return JSON.parse(response.getContentText());
-  } catch (e) {
-    return null;
-  }
-}
-
-function firebaseSet(path, data) {
-  var url = FIREBASE_URL + "/" + path + ".json";
-  var options = { method: "put", contentType: "application/json", payload: JSON.stringify(data), muteHttpExceptions: true };
-  try {
-    var res = UrlFetchApp.fetch(url, options);
-    var code = res.getResponseCode();
-    if (code >= 200 && code < 300) return true;
-    Logger.log("❌ Firebase 저장 실패 (HTTP " + code + "): " + res.getContentText());
-    return false;
-  } catch (e) {
-    Logger.log("❌ Firebase 저장 예외: " + e.message);
-    return false;
-  }
-}
-
-function firebaseDelete(path) {
-  var url = FIREBASE_URL + "/" + path + ".json";
-  var options = { method: "delete", muteHttpExceptions: true };
-  try {
-    UrlFetchApp.fetch(url, options);
-    Logger.log("🗑️ Firebase 삭제: " + path);
-    return true;
-  } catch (e) {
-    Logger.log("❌ Firebase 삭제 실패: " + e.message);
-    return false;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// 수동 테스트 / 유지보수용 함수
-// ═══════════════════════════════════════════════════════════════
-function testSync() {
-  Logger.log("🔄 수동 동기화 시작 (v2)...");
-  syncAll();
-  Logger.log("✅ 수동 동기화 완료!");
-}
-
-function testCancels() {
-  Logger.log("🔄 취소/변경 감지 테스트 시작...");
-  syncKlookCancelsFromGmail();
-  syncAcuityCancelsFromGmail();
-  syncAcuityReschedulesFromGmail();
-  Logger.log("✅ 취소/변경 감지 테스트 완료!");
-}
-
-function checkStatus() {
-  var props = PropertiesService.getScriptProperties();
-  Logger.log("마지막 캘린더 동기화: " + props.getProperty("lastCalSync"));
-  Logger.log("처리된 클룩 이메일 수: " + JSON.parse(props.getProperty("processedKlook") || "[]").length);
-  Logger.log("처리된 취소/변경 이메일 수: " + JSON.parse(props.getProperty("processedCancels") || "[]").length);
-  var test = firebaseGet("bookings");
-  if (test !== null) {
-    var count = test ? Object.keys(test).length : 0;
-    Logger.log("✅ Firebase 연결 OK — 현재 예약 " + count + "건");
-  } else {
-    Logger.log("❌ Firebase 연결 실패");
-  }
-}
-
-function resetProcessedCancels() {
-  PropertiesService.getScriptProperties().setProperty("processedCancels", "[]");
-  Logger.log("✅ 취소/변경 처리 기록 초기화 완료");
-}
-
-function resetProcessedKlook() {
-  PropertiesService.getScriptProperties().setProperty("processedKlook", "[]");
-  Logger.log("✅ 클룩 처리기록 초기화 — 다음 실행 때 최근 7일 예약 재동기화");
-}
-
-// 잘못 저장된 깨진 레코드(키 'undefined') 정리용 — 한 번만 실행하면 됨
-function cleanUndefinedBooking() {
-  firebaseDelete("bookings/undefined");
-  Logger.log("🧹 bookings/undefined 레코드 삭제 완료");
-}
-
-// ═══════════════════════════════════════════════════════════════
-// 클룩 고객 방문안내 자동 발송
-// ★ FIX: 파서 함수 이름을 parseKlookDirections 로 변경 (예약 파서와 충돌 제거)
-// ═══════════════════════════════════════════════════════════════
-var DIR_KLOOK_SENDER = 'operator@klook.com';
-var DIR_KLOOK_SUBJECT_KEYWORD = '예약내역 확정';
-var DIR_REPLY_EMAIL = 'unehana0880@gmail.com';
-var DIR_WHATSAPP_LINK = 'https://api.whatsapp.com/send/?phone=8201051392696';
-var DIR_INSTAGRAM_LINK = 'https://www.instagram.com/aesthetic_laurel/';
-var DIR_GMAPS_LINK = 'https://maps.app.goo.gl/dMDSbhiagT6eAS5u7';
-var DIR_MAP_IMAGE_URL = '';
-var DIR_SENT_LABEL_NAME = 'Laurel-안내발송완료';
-
-function setupDirectionsEmail() {
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'sendKlookDirectionsEmails') {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
-  ScriptApp.newTrigger('sendKlookDirectionsEmails').timeBased().everyMinutes(10).create();
-  if (!GmailApp.getUserLabelByName(DIR_SENT_LABEL_NAME)) {
-    GmailApp.createLabel(DIR_SENT_LABEL_NAME);
-  }
-  Logger.log('✅ 클룩 방문안내 자동발송 트리거 설정 완료 (10분마다)');
-}
-
-function sendKlookDirectionsEmails() {
-  var label = GmailApp.getUserLabelByName(DIR_SENT_LABEL_NAME) || GmailApp.createLabel(DIR_SENT_LABEL_NAME);
-
-  var query = 'from:' + DIR_KLOOK_SENDER
-            + ' subject:("' + DIR_KLOOK_SUBJECT_KEYWORD + '")'
-            + ' newer_than:7d'
-            + ' -label:' + DIR_SENT_LABEL_NAME;
-
-  var threads = GmailApp.search(query, 0, 30);
-  var sentCount = 0;
-
-  for (var i = 0; i < threads.length; i++) {
-    var messages = threads[i].getMessages();
-    var msg = messages[messages.length - 1];
-    var info = parseKlookDirections(msg.getBody());
-
-    if (!info.email || info.email.indexOf('@') === -1) {
-      Logger.log('⚠️ 고객 이메일 파싱 실패, 건너뜀: ' + threads[i].getFirstMessageSubject());
-      continue;
-    }
-    if (info.email.indexOf('klook.com') !== -1) {
-      Logger.log('⚠️ 클룩 내부 주소 감지, 건너뜀: ' + info.email);
-      threads[i].addLabel(label);
-      continue;
-    }
-
-    try {
-      GmailApp.sendEmail(
-        info.email,
-        'Your Laurel Studio Appointment — How to Find Us 📍',
-        directionsPlainText(info),
-        { htmlBody: directionsHtml(info), name: 'Laurel Studio', replyTo: DIR_REPLY_EMAIL }
-      );
-      threads[i].addLabel(label);
-      sentCount++;
-      Logger.log('✅ 발송 완료: ' + info.name + ' <' + info.email + '> / ' + info.date + ' ' + info.time);
-    } catch (e) {
-      Logger.log('❌ 발송 실패 (' + info.email + '): ' + e.message);
-    }
-  }
-  Logger.log('📨 클룩 방문안내 발송 완료 — 총 ' + sentCount + '건');
-}
-
-// ★ 방문안내 전용 파서 (예약 파서 parseKlookEmail 와 절대 충돌 금지) ★
-function parseKlookDirections(html) {
-  var text = html.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
-
-  function grab(labelPatterns) {
-    for (var i = 0; i < labelPatterns.length; i++) {
-      var re = new RegExp(labelPatterns[i] + '\\s*[:：]?\\s*([^\\n]+)', 'i');
-      var m = text.match(re);
-      if (m && m[1]) return m[1].trim();
-    }
-    return '';
-  }
-
-  var email = '';
-  var emailRaw = grab(['대표 예약자 이메일 주소', 'Email address of the lead guest', 'Email']);
-  var em = emailRaw.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/);
-  if (em) email = em[0];
-
-  var name = grab(['대표 예약자명', 'Lead guest', 'Guest name']);
-  name = name.replace(/^\(MISS\)|^\(MR\)|^\(MRS\)|^\(MS\)/i, '').trim();
-
-  var date = grab(['요청 날짜', 'Requested date', 'Date']);
-  var time = grab(['요청 시간', 'Requested time', 'Time']);
-  var pkg = grab(['패키지', 'Package']);
-
-  return { email: email, name: name, date: date, time: time, pkg: pkg };
-}
-
-function directionsHtml(info) {
-  var greetName = info.name ? info.name : 'there';
-  var mapImageBlock = DIR_MAP_IMAGE_URL
-    ? '<div style="text-align:center;margin:20px 0;"><img src="' + DIR_MAP_IMAGE_URL + '" alt="How to find Laurel Studio" style="width:100%;max-width:520px;border-radius:12px;border:1px solid #EBE8E2;"></div>'
-    : '';
-
-  return ''
-  + '<div style="font-family:\'Helvetica Neue\',Arial,sans-serif;max-width:600px;margin:0 auto;color:#1C1917;line-height:1.6;">'
-  + '<div style="text-align:center;padding:24px 0;border-bottom:1px solid #EBE8E2;">'
-  +   '<div style="font-size:11px;letter-spacing:.25em;color:#8A8278;text-transform:uppercase;">Laurel Studio</div>'
-  +   '<div style="font-size:22px;color:#1C1917;margin-top:4px;">See you soon 🌿</div>'
-  + '</div>'
-  + '<div style="padding:24px 20px;">'
-  +   '<p>Dear ' + greetName + ',</p>'
-  +   '<p>Thank you for booking with <strong>Laurel Studio</strong>! Your appointment is confirmed. Here is everything you need to find us.</p>'
-  +   '<div style="background:#FAF9F6;border:1px solid #EBE8E2;border-radius:12px;padding:16px 20px;margin:20px 0;">'
-  +     '<div style="font-size:13px;color:#8A8278;margin-bottom:8px;">YOUR APPOINTMENT</div>'
-  +     '<div style="font-size:15px;"><strong>Date:</strong> ' + (info.date || '-') + '</div>'
-  +     '<div style="font-size:15px;"><strong>Time:</strong> ' + (info.time || '-') + ' (Seoul, GMT+9)</div>'
-  +     (info.pkg ? '<div style="font-size:15px;"><strong>Program:</strong> ' + info.pkg + '</div>' : '')
-  +   '</div>'
-  +   '<div style="text-align:center;margin:28px 0 12px;"><div style="font-size:16px;font-weight:600;">📍 How to Find Us</div></div>'
-  +   mapImageBlock
-  +   '<div style="text-align:center;font-size:15px;color:#444;margin:16px 0;">'
-  +     'Laurel Studio | 3F, 351-5 Seogyo-dong, Mapo-gu, Seoul<br>'
-  +     'Above Ediya Coffee, across from L7 Hongdae Hotel<br>'
-  +     '<strong>About 3 min walk from Hongik Univ. Station (Line 2), Exit 1</strong>'
-  +   '</div>'
-  +   '<div style="border:2px solid #1C1917;border-radius:8px;padding:18px;text-align:center;margin:20px auto;max-width:380px;">'
-  +     '<div style="font-size:14px;color:#1C1917;margin-bottom:10px;">When taking an Uber or taxi, please show this to your driver</div>'
-  +     '<div style="font-size:24px;font-weight:700;color:#1C1917;line-height:1.3;">로렐스튜디오<br>마포구 월드컵북로 7</div>'
-  +   '</div>'
-  +   '<div style="text-align:center;margin:24px 0;">'
-  +     '<a href="' + DIR_GMAPS_LINK + '" style="display:inline-block;background:#2A5FA8;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;">📍 Open in Google Maps</a>'
-  +   '</div>'
-  +   '<hr style="border:none;border-top:1px solid #EBE8E2;margin:24px 0;">'
-  +   '<div style="text-align:center;font-size:14px;color:#444;">'
-  +     '<p>We are open daily, 10:00 AM – 7:00 PM.</p>'
-  +     '<p style="margin-top:16px;"><strong>💬 Questions? Lost on the way? We\'re here to help.</strong></p>'
-  +     '<p style="margin-top:8px;">'
-  +       '📷 Instagram DM: <a href="' + DIR_INSTAGRAM_LINK + '" style="color:#C13584;">@aesthetic_laurel</a><br>'
-  +       '💬 WhatsApp: <a href="' + DIR_WHATSAPP_LINK + '" style="color:#3D7A52;">Message us</a><br>'
-  +       '✉️ Email: <a href="mailto:' + DIR_REPLY_EMAIL + '" style="color:#8A8278;">' + DIR_REPLY_EMAIL + '</a>'
-  +     '</p>'
-  +     '<p style="font-style:italic;color:#8A8278;margin-top:20px;">We look forward to seeing you! — The Laurel Studio Team 🌸</p>'
-  +   '</div>'
-  + '</div>'
-  + '</div>';
-}
-
-function directionsPlainText(info) {
-  return 'Dear ' + (info.name || 'guest') + ',\n\n'
-    + 'Thank you for booking with Laurel Studio! Your appointment is confirmed.\n\n'
-    + 'YOUR APPOINTMENT\n'
-    + 'Date: ' + (info.date || '-') + '\n'
-    + 'Time: ' + (info.time || '-') + ' (Seoul, GMT+9)\n'
-    + (info.pkg ? 'Program: ' + info.pkg + '\n' : '')
-    + '\nHOW TO FIND US\n'
-    + 'Laurel Studio | 3F, 351-5 Seogyo-dong, Mapo-gu, Seoul\n'
-    + 'Above Ediya Coffee, across from L7 Hongdae Hotel\n'
-    + 'About 3 min walk from Hongik Univ. Station (Line 2), Exit 1\n\n'
-    + 'For taxi (show to driver): 로렐스튜디오, 마포구 월드컵북로 7\n'
-    + 'Google Maps: ' + DIR_GMAPS_LINK + '\n\n'
-    + 'We are open daily, 10:00 AM - 7:00 PM.\n\n'
-    + 'Questions? Lost on the way? We are here to help.\n'
-    + 'Instagram DM: ' + DIR_INSTAGRAM_LINK + '\n'
-    + 'WhatsApp: ' + DIR_WHATSAPP_LINK + '\n'
-    + 'Email: ' + DIR_REPLY_EMAIL + '\n\n'
-    + 'We look forward to seeing you! - The Laurel Studio Team';
-}
-
-function testDirectionsEmail() {
-  var query = 'from:' + DIR_KLOOK_SENDER + ' subject:("' + DIR_KLOOK_SUBJECT_KEYWORD + '") newer_than:7d';
-  var threads = GmailApp.search(query, 0, 5);
-  Logger.log('🔍 최근 클룩 확정 메일 ' + threads.length + '건 발견');
-  for (var i = 0; i < threads.length; i++) {
-    var messages = threads[i].getMessages();
-    var msg = messages[messages.length - 1];
-    var info = parseKlookDirections(msg.getBody());
-    Logger.log('─────────────────────────');
-    Logger.log('이름: ' + info.name);
-    Logger.log('이메일: ' + info.email);
-    Logger.log('날짜: ' + info.date + ' / 시간: ' + info.time);
-    Logger.log('패키지: ' + info.pkg);
-  }
-  Logger.log('─────────────────────────');
-  Logger.log('✅ 테스트 완료');
-}
-
-function resetDirectionsLabel() {
-  var label = GmailApp.getUserLabelByName(DIR_SENT_LABEL_NAME);
-  if (label) {
-    var threads = label.getThreads();
-    for (var i = 0; i < threads.length; i++) {
-      threads[i].removeLabel(label);
-    }
-    Logger.log('🔄 ' + threads.length + '건 라벨 초기화 완료');
-  }
-}
+var now=new Date();
+document.getElementById('hdrDate').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
+selDate=getTODAY(); renderCal(); goTab('today');
+</script>
+</body>
+</html>
