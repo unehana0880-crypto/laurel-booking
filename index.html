@@ -398,8 +398,15 @@ function renderToday(){
   var fullSlots=0;
   SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0&&roomRem(date,s,4)===0) fullSlots++; });
   document.getElementById('todaySummary').innerHTML='<div class="sum-card"><div class="sum-num" style="color:var(--room2)">'+totalPax+'</div><div class="sum-label">총 고객 수</div></div><div class="sum-card"><div class="sum-num" style="color:var(--green)">'+totalSlots+'</div><div class="sum-label">예약 슬롯</div></div><div class="sum-card"><div class="sum-num" style="color:var(--red)">'+fullSlots+'</div><div class="sum-label">마감 슬롯</div></div>';
-  document.getElementById('todaySlots').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(date,slot,i);}).join('');
-}
+  var slotHtml=SLOTS.map(function(slot,i){return slotCardHTML(date,slot,i);}).join('');
+  // ── 슬롯에 안 잡히는(형식 깨진) 오늘 예약 표시 ──
+  var orphans=bookings.filter(function(b){return b.date===date && SLOTS.indexOf(b.slot)===-1;});
+  if(orphans.length){
+    slotHtml+='<div class="ts-card" style="border:2px solid var(--red)"><div class="ts-hdr"><div class="ts-time">⚠️ 시간 미확인 ('+orphans.length+')</div><div class="ts-badge ts-full">확인 필요</div></div><div style="padding:6px 12px 10px">'
+      +orphans.map(function(b){return bkMini(b)+'<div style="font-size:11px;color:var(--mid);margin:-4px 0 10px 4px">raw slot: "'+(b.slot===undefined?'(없음)':b.slot)+'" · id: '+b.id+'</div>';}).join('')
+      +'</div></div>';
+  }
+  document.getElementById('todaySlots').innerHTML=slotHtml;
 
 var MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 function changeMonth(d){ selM+=d; if(selM>11){selM=0;selY++;} if(selM<0){selM=11;selY--;} renderCal(); }
