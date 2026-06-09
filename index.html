@@ -67,6 +67,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
 .btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
 .btag-bed{background:var(--accent);color:white;font-weight:700;}
+.btag-class{background:#E5D5F0;color:var(--room4);font-weight:700;}
 .src-klook{background:#FFF0E0;color:#C05000;}
 .src-ig{background:#FEF0F6;color:#B02060;}
 .src-wa{background:#E8F8EE;color:#1A8035;}
@@ -256,10 +257,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
       </div>
       <div class="fg"><label>프로그램 (선택)</label>
-        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>ORI 분석 + 케어</option><option>바디 케어</option></select>
+        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>ORI 분석 + 케어</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -287,7 +288,28 @@ const db  = getDatabase(app);
 var SLOTS=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
 var SLOT_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
 var ROOM_CAP={2:2,4:4};
-var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web'};
+var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
+
+// ★ 클래스(케어가 아닌 체험형) 프로그램 — 태그 색 구분용
+var CLASS_PROGRAMS = ['부채 그림 & 캘리그라피 클래스'];
+
+// ═══════════════════════════════════════════════════════════════
+// ★ 프로그램명 표준화 — 과거에 잘못 저장된 값/표기 흔들림 자동 교정
+//   (AutoSync의 mapProgram과 결과 이름을 100% 동일하게 유지할 것)
+// ═══════════════════════════════════════════════════════════════
+function normalizeProgram(p){
+  if(!p) return p;
+  var s = String(p).toLowerCase();
+  if(s.indexOf('부채')!==-1 || s.indexOf('캘리그라피')!==-1 || s.indexOf('calligraphy')!==-1 || s.indexOf('fan')!==-1) return '부채 그림 & 캘리그라피 클래스';
+  if(s.indexOf('ori')!==-1) return 'ORI 분석 + 케어';
+  if(s.indexOf('바디')!==-1 || s.indexOf('body')!==-1) return '바디 케어';
+  if(s.indexOf('미백')!==-1 || s.indexOf('whitening')!==-1) return '미백 케어';
+  if(s.indexOf('속눈썹')!==-1 || s.indexOf('lash')!==-1) return '속눈썹펌';
+  if(s.indexOf('컨설팅')!==-1 || s.indexOf('consult')!==-1) return '퍼스널 피부 컨설팅 90분';
+  if(s.indexOf('프리미엄')!==-1 || s.indexOf('premium')!==-1) return '프리미엄 케어 60분';
+  if(s.indexOf('기본')!==-1 || s.indexOf('베이직')!==-1 || s.indexOf('basic')!==-1 || s.indexOf('50')!==-1) return '기본 케어 50분';
+  return p; // 못 알아보면 원본 유지
+}
 
 var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
 var mRoom=null, mSlot=null, editId=null, mBeds=[];
@@ -365,13 +387,14 @@ function setSyncStatus(status) {
 onValue(ref(db,'bookings'),(snap)=>{
   const data=snap.val();
   bookings=data?Object.values(data):[];
-  // ── 데이터 정규화: pax 숫자 보장 + slot을 "HH:00"으로 통일 ──
+  // ── 데이터 정규화: pax 숫자 보장 + slot을 "HH:00"으로 통일 + program 표준화 ──
   bookings.forEach(function(b){
     b.pax = parseInt(b.pax) || 1;                  // 깨진 pax → 1
     if (b.slot) {
       var hh = String(b.slot).match(/(\d{1,2})/);  // "13:00:00","13시" 등에서 시 추출
       if (hh) b.slot = String(parseInt(hh[1])).padStart(2,'0') + ':00';
     }
+    b.program = normalizeProgram(b.program);       // ★ "60"→프리미엄 오분류 등 표시 단계에서 교정
   });
   renderAll();
   setSyncStatus('connected');
@@ -444,11 +467,13 @@ function slotCardHTML(date,slot,i){
   return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/6</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms"><div class="ts-room"><div class="ts-rlabel"><span class="rb rb2">2인룸</span> '+r2+'/2</div><div class="pips">'+[1,2].map(function(n){return '<div class="pip '+(n<=u2?'on2':'')+'"></div>';}).join('')+'</div>'+(b2.length?b2.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div><div class="ts-divider"></div><div class="ts-room"><div class="ts-rlabel"><span class="rb rb4">4인룸</span> '+r4+'/4</div><div class="pips">'+[1,2,3,4].map(function(n){return '<div class="pip '+(n<=u4?'on4':'')+'"></div>';}).join('')+'</div>'+(b4.length?b4.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div></div></div>';
 }
 
-// ★ 베드 번호 표시 추가 ★
+// ★ 베드 번호 + 클래스 태그 색 구분 표시 ★
 function bkMini(b){
   var sc=SRC_CLS[b.source]||'';
   var bedTag = b.beds && b.beds.length ? '<span class="btag btag-bed">🛏️ ' + b.beds.join(',') + '번</span>' : '';
-  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div><div class="bk-tags">'+bedTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+(b.program?'<span class="btag">'+b.program+'</span>':'')+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
+  var isClass = b.program && CLASS_PROGRAMS.indexOf(b.program) !== -1;
+  var progTag = b.program ? '<span class="btag '+(isClass?'btag-class':'')+'">'+(isClass?'🎨 ':'')+b.program+'</span>' : '';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div><div class="bk-tags">'+bedTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+progTag+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
 }
 
 // ★ 공유 텍스트에 베드 번호 포함 ★
