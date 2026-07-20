@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Laurel Studio — 예약 관리</title>
@@ -153,6 +153,82 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .bed-btn.taken{background:var(--border);color:var(--mid);opacity:.5;cursor:not-allowed;}
 .bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:10px;}
 .bed-room-label:first-child{margin-top:0;}
+
+/* ═══════════════════════════════════════════════════
+   데스크톱 반응형 (추가 전용 — 모바일 스타일 영향 없음)
+   ═══════════════════════════════════════════════════ */
+
+/* ── 태블릿 768px+ ── */
+@media (min-width: 768px){
+  body{ max-width:720px; }
+  .tabbar{ max-width:720px; }
+  .hdr{ height:60px; padding:0 24px; }
+  .hdr-logo{ font-size:20px; }
+  .today-summary{ padding:0 24px 16px; gap:12px; }
+  .sum-card{ padding:16px 12px; }
+  .sum-num{ font-size:32px; }
+  .sum-label{ font-size:11px; }
+  .today-slots{ padding:0 24px; gap:10px; }
+  .slot-list{ padding:0 20px; gap:10px; }
+  .sync-badge{ padding:4px 24px 12px; font-size:12px; }
+}
+
+/* ── 데스크톱 1024px+ ── */
+@media (min-width: 1024px){
+  body{ max-width:1080px; }
+  .tabbar{ max-width:1080px; }
+
+  /* 상단 요약 카드 크게 */
+  .today-summary{ padding:0 32px 20px; gap:16px; }
+  .sum-card{ padding:20px 16px; border-radius:14px; }
+  .sum-num{ font-size:38px; }
+  .sum-label{ font-size:12px; }
+
+  /* 예약 슬롯 2열로 — 넓은 화면 활용 */
+  .today-slots, .slot-list{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    padding:0 32px;
+    align-items:start;
+  }
+  .ts-card{ border-radius:14px; }
+  .ts-hdr{ padding:14px 18px; }
+  .ts-time{ font-size:16px; }
+  .ts-add{ width:34px; height:34px; font-size:20px; }
+  .ts-room{ padding:14px 16px; }
+
+  /* 캘린더 크게 */
+  .cal-cell{ border-radius:12px; }
+  .cal-cells{ gap:8px; }
+  .cal-dow{ font-size:13px; }
+
+  /* 시간 선택 6열 */
+  .time-grid{ grid-template-columns:repeat(6,1fr); gap:8px; }
+
+  .sync-badge{ padding:4px 32px 14px; }
+  .hdr{ padding:0 32px; }
+
+  /* 시트 → 가운데 다이얼로그로 전환 */
+  .overlay, .share-popup{ align-items:center; }
+  .sheet{
+    max-width:560px;
+    border-radius:20px;
+    max-height:86vh;
+  }
+  .share-sheet{
+    max-width:520px;
+    border-radius:20px;
+    padding:24px 28px 28px;
+  }
+}
+
+/* ── 와이드 1440px+ ── */
+@media (min-width: 1440px){
+  body{ max-width:1280px; }
+  .tabbar{ max-width:1280px; }
+  .today-slots, .slot-list{ grid-template-columns:repeat(3,1fr); }
+}
 </style>
 </head>
 <body>
