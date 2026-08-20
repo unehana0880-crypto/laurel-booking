@@ -42,7 +42,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .slot-list{padding:0 14px;}
 .ts-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .ts-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
-.ts-time{font-size:14px;font-weight:700;flex:1;}
+.ts-time{font-size:14px;font-weight:700;}
 .ts-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
 .ts-open{background:var(--green-bg);color:var(--green);}
 .ts-partial{background:var(--yellow-bg);color:var(--yellow);}
@@ -56,7 +56,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .rb2{background:var(--room2-bg);color:var(--room2);}
 .rb6{background:var(--room6-bg);color:var(--room6);}
 .rb8{background:var(--room8-bg);color:var(--room8);}
-.rb2{background:var(--room2-bg);color:var(--room2);}
 .pips{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;}
 .pip{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);}
 .pip.on2{background:var(--room2);border-color:transparent;}
@@ -65,17 +64,21 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;}
 .bk-row{display:flex;align-items:center;gap:5px;}
 .bk-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-time{font-size:11px;font-weight:700;color:var(--accent);margin-right:5px;}
+.bk-time.bk-ov{color:var(--yellow);}
 .bk-acts{display:flex;gap:3px;}
 .bk-btn{width:26px;height:26px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
 .bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
 .btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
 .btag-bed{background:var(--accent);color:white;font-weight:700;}
 .btag-class{background:#E5D5F0;color:var(--room6);font-weight:700;}
+.btag-ov{background:var(--yellow-bg);color:var(--yellow);font-weight:700;border:1px solid #F0D98A;}
 .src-klook{background:#FFF0E0;color:#C05000;}
 .src-ig{background:#FEF0F6;color:#B02060;}
 .src-wa{background:#E8F8EE;color:#1A8035;}
 .src-web{background:var(--green-bg);color:var(--green);}
 .src-kkt{background:#FEF9D6;color:#7A6500;}
+.src-abnb{background:#FFE8EC;color:#C4204A;}
 .empty-r{font-size:11px;color:var(--border);padding:2px 0;}
 .share-popup{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:200;align-items:flex-end;justify-content:center;}
 .share-popup.open{display:flex;}
@@ -132,8 +135,14 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .tpick .tt{font-size:11px;font-weight:600;}
 .tpick .tr{font-size:10px;opacity:.6;margin-top:2px;}
 .tpick.active{border-color:var(--dark);background:var(--dark);color:white;}
-.tpick.t-full{background:var(--red-bg);border-color:var(--border);}
-.tpick.t-full .tr{color:var(--red);}
+.tpick.t-full{background:var(--yellow-bg);border-color:#F0D98A;}
+.tpick.t-full .tr{color:var(--yellow);}
+.min-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px;}
+.mpick{padding:10px 2px;border:1.5px solid var(--border);border-radius:9px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;}
+.mpick.active{border-color:var(--dark);background:var(--dark);color:white;}
+.mpick.m-warn{background:var(--yellow-bg);border-color:#F0D98A;color:var(--yellow);}
+.mpick.m-warn.active{background:var(--dark);border-color:var(--dark);color:white;}
+.picked-time{font-size:12px;color:var(--green);font-weight:700;margin-top:9px;}
 .malert{padding:11px 13px;border-radius:10px;font-size:12px;margin-bottom:12px;font-weight:500;}
 .a-ok{background:var(--green-bg);color:var(--green);border:1px solid #B0D4BC;}
 .a-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid #F0D98A;}
@@ -143,90 +152,39 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .btn-del-bk{padding:14px 16px;border:1.5px solid var(--red);color:var(--red);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
 .no-sel{text-align:center;padding:60px 20px;color:var(--mid);}
 .no-sel .ni{font-size:48px;margin-bottom:12px;}
-/* ★ 베드 선택 UI ★ */
 .bed-picker{display:none;margin-top:8px;}
 .bed-picker.visible{display:block;}
 .bed-grid{display:flex;gap:6px;flex-wrap:wrap;}
 .bed-btn{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:white;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .bed-btn:active{transform:scale(.95);}
+.bed-btn.overlap{border-color:#F0D98A;background:var(--yellow-bg);color:var(--yellow);}
 .bed-btn.active{border-color:var(--accent);background:var(--accent);color:white;}
-.bed-btn.taken{background:var(--border);color:var(--mid);opacity:.5;cursor:not-allowed;}
-.bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:10px;}
-.bed-room-label:first-child{margin-top:0;}
+.bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;}
 
-/* ═══════════════════════════════════════════════════
-   데스크톱 반응형 (추가 전용 — 모바일 스타일 영향 없음)
-   ═══════════════════════════════════════════════════ */
-
-/* ── 태블릿 768px+ ── */
 @media (min-width: 768px){
-  body{ max-width:720px; }
-  .tabbar{ max-width:720px; }
-  .hdr{ height:60px; padding:0 24px; }
-  .hdr-logo{ font-size:20px; }
+  body{ max-width:720px; } .tabbar{ max-width:720px; }
+  .hdr{ height:60px; padding:0 24px; } .hdr-logo{ font-size:20px; }
   .today-summary{ padding:0 24px 16px; gap:12px; }
-  .sum-card{ padding:16px 12px; }
-  .sum-num{ font-size:32px; }
-  .sum-label{ font-size:11px; }
-  .today-slots{ padding:0 24px; gap:10px; }
-  .slot-list{ padding:0 20px; gap:10px; }
+  .sum-card{ padding:16px 12px; } .sum-num{ font-size:32px; } .sum-label{ font-size:11px; }
+  .today-slots{ padding:0 24px; gap:10px; } .slot-list{ padding:0 20px; gap:10px; }
   .sync-badge{ padding:4px 24px 12px; font-size:12px; }
 }
-
-/* ── 데스크톱 1024px+ ── */
 @media (min-width: 1024px){
-  body{ max-width:1080px; }
-  .tabbar{ max-width:1080px; }
-
-  /* 상단 요약 카드 크게 */
+  body{ max-width:1080px; } .tabbar{ max-width:1080px; }
   .today-summary{ padding:0 32px 20px; gap:16px; }
-  .sum-card{ padding:20px 16px; border-radius:14px; }
-  .sum-num{ font-size:38px; }
-  .sum-label{ font-size:12px; }
-
-  /* 예약 슬롯 2열로 — 넓은 화면 활용 */
-  .today-slots, .slot-list{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    padding:0 32px;
-    align-items:start;
-  }
-  .ts-card{ border-radius:14px; }
-  .ts-hdr{ padding:14px 18px; }
-  .ts-time{ font-size:16px; }
-  .ts-add{ width:34px; height:34px; font-size:20px; }
-  .ts-room{ padding:14px 16px; }
-
-  /* 캘린더 크게 */
-  .cal-cell{ border-radius:12px; }
-  .cal-cells{ gap:8px; }
-  .cal-dow{ font-size:13px; }
-
-  /* 시간 선택 6열 */
-  .time-grid{ grid-template-columns:repeat(6,1fr); gap:8px; }
-
-  .sync-badge{ padding:4px 32px 14px; }
-  .hdr{ padding:0 32px; }
-
-  /* 시트 → 가운데 다이얼로그로 전환 */
+  .sum-card{ padding:20px 16px; border-radius:14px; } .sum-num{ font-size:38px; } .sum-label{ font-size:12px; }
+  .today-slots, .slot-list{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:0 32px; align-items:start; }
+  .ts-card{ border-radius:14px; } .ts-hdr{ padding:14px 18px; } .ts-time{ font-size:16px; }
+  .ts-add{ width:34px; height:34px; font-size:20px; } .ts-room{ padding:14px 16px; }
+  .cal-cell{ border-radius:12px; } .cal-cells{ gap:8px; } .cal-dow{ font-size:13px; }
+  .time-grid{ grid-template-columns:repeat(5,1fr); gap:8px; }
+  .sync-badge{ padding:4px 32px 14px; } .hdr{ padding:0 32px; }
   .overlay, .share-popup{ align-items:center; }
-  .sheet{
-    max-width:560px;
-    border-radius:20px;
-    max-height:86vh;
-  }
-  .share-sheet{
-    max-width:520px;
-    border-radius:20px;
-    padding:24px 28px 28px;
-  }
+  .sheet{ max-width:560px; border-radius:20px; max-height:86vh; }
+  .share-sheet{ max-width:520px; border-radius:20px; padding:24px 28px 28px; }
 }
-
-/* ── 와이드 1440px+ ── */
 @media (min-width: 1440px){
-  body{ max-width:1280px; }
-  .tabbar{ max-width:1280px; }
+  body{ max-width:1280px; } .tabbar{ max-width:1280px; }
   .today-slots, .slot-list{ grid-template-columns:repeat(3,1fr); }
 }
 </style>
@@ -267,8 +225,8 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     </div>
     <div class="legend">
       <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>여유</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>일부 마감</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>마감</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>일부 참</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>빽빽함</div>
     </div>
   </div>
 
@@ -315,7 +273,23 @@ input:focus,select:focus{border-color:var(--green);background:white;}
     <div class="sheet-body">
       <div id="sheetAlert"></div>
       <div class="fg"><label>날짜</label><input type="date" id="mDate" onchange="onDateChange()"></div>
-      <div class="fg"><label>시간</label><div class="time-grid" id="timePicker"></div></div>
+
+      <div class="fg">
+        <label>시간</label>
+        <div class="time-grid" id="timePicker"></div>
+        <div class="min-grid" id="minPicker"></div>
+        <div class="picked-time" id="pickedTime"></div>
+      </div>
+
+      <div class="fg"><label>소요시간</label>
+        <select id="mDur" onchange="onDurChange()">
+          <option value="">프로그램 기준 자동</option>
+          <option value="30">30분</option><option value="40">40분</option>
+          <option value="50">50분</option><option value="60">60분</option>
+          <option value="70">70분</option><option value="90">90분</option><option value="120">120분</option>
+        </select>
+      </div>
+
       <div class="fg"><label>룸</label>
         <div class="room-picker">
           <div class="rpick" id="rp8" onclick="pickRoom(8)"><div class="rn">4층</div><div class="rl">8명</div></div>
@@ -324,12 +298,9 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         </div>
       </div>
       <div class="fg"><label>인원</label><select id="mPax" onchange="checkCap()"><option value="">룸 먼저 선택</option></select></div>
-      <!-- ★ 베드 번호 선택 ★ -->
       <div class="fg">
         <label>베드 번호 배정</label>
-        <div class="bed-picker" id="bedPicker">
-          <div id="bedButtons"></div>
-        </div>
+        <div class="bed-picker" id="bedPicker"><div id="bedButtons"></div></div>
         <div id="bedHint" style="font-size:11px;color:var(--mid);margin-top:4px;">룸과 시간을 선택하면 베드를 배정할 수 있어요</div>
       </div>
       <div class="fg"><label>이름 (선택)</label><input type="text" id="mName" placeholder="고객 이름"></div>
@@ -337,10 +308,10 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
       </div>
       <div class="fg"><label>프로그램 (선택)</label>
-        <select id="mProgram"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
+        <select id="mProgram" onchange="onProgramChange()"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -361,142 +332,190 @@ const firebaseConfig = {
   messagingSenderId: "516403607342",
   appId: "1:516403607342:web:5389cdfe397afcee1cacbf"
 };
-
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
-var SLOTS=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
-var SLOT_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
-var ROOM_CAP={8:8,6:6,2:2};          // ★ 8=4층 · 6=3층 · 2=바디 (독립 구역)
-var TOTAL_CAP=ROOM_CAP[8]+ROOM_CAP[6]+ROOM_CAP[2];   // =16
+/* ═══════════ 상수 ═══════════ */
+var HOURS=[10,11,12,13,14,15,16,17,18,19];
+var HOUR_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후 2시','오후 3시','오후 4시','오후 5시','오후 6시','오후 7시'];
+var MINUTES=[0,10,20,30,40,50];
+var CLOSE_MIN=(HOURS[HOURS.length-1]+1)*60;
+
+var ROOM_CAP={8:8,6:6,2:2};
+var TOTAL_CAP=ROOM_CAP[8]+ROOM_CAP[6]+ROOM_CAP[2];
 var ZONE_LABEL={8:'4층',6:'3층',2:'바디'};
-function zoneLabel(r){ return ZONE_LABEL[r] || (r+'인'); }
-var SRC_CLS={'Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
+function zoneLabel(r){ return ZONE_LABEL[r]||(r+'인'); }
 
-// ★ 클래스(케어가 아닌 체험형) 프로그램 — 태그 색 구분용
-var CLASS_PROGRAMS = ['부채 그림 & 캘리그라피 클래스'];
+var PROGRAM_DUR={'기본 케어 50분':50,'프리미엄 케어 60분':60,'퍼스널 피부 컨설팅 90분':90,'바디 케어':90,'미백 케어':50,'속눈썹펌':60,'부채 그림 & 캘리그라피 클래스':60};
+var DEFAULT_DUR=60;
 
-// ═══════════════════════════════════════════════════════════════
-// ★ 프로그램명 표준화 — 과거에 잘못 저장된 값/표기 흔들림 자동 교정
-//   (AutoSync의 mapProgram과 결과 이름을 100% 동일하게 유지할 것)
-// ═══════════════════════════════════════════════════════════════
+var SRC_CLS={'Airbnb':'src-abnb','Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
+var CLASS_PROGRAMS=['부채 그림 & 캘리그라피 클래스'];
+
+/* ═══════════ 정규화 ═══════════ */
 function normalizeProgram(p){
   if(!p) return p;
-  var s = String(p).toLowerCase();
-  // 1) 고유 키워드 (충돌 없음)
-  if(s.indexOf('부채')!==-1 || s.indexOf('캘리그라피')!==-1 || s.indexOf('calligraphy')!==-1 || s.indexOf('fan')!==-1) return '부채 그림 & 캘리그라피 클래스';
-  if(s.indexOf('바디')!==-1 || s.indexOf('body')!==-1) return '바디 케어';
-  if(s.indexOf('미백')!==-1 || s.indexOf('whitening')!==-1) return '미백 케어';
-  if(s.indexOf('속눈썹')!==-1 || s.indexOf('lash')!==-1) return '속눈썹펌';
-  // 2) 소요시간 우선 (Personalized ↔ Personal 충돌 방지)
+  var s=String(p).toLowerCase();
+  if(s.indexOf('부채')!==-1||s.indexOf('캘리그라피')!==-1||s.indexOf('calligraphy')!==-1||s.indexOf('fan')!==-1) return '부채 그림 & 캘리그라피 클래스';
+  if(s.indexOf('바디')!==-1||s.indexOf('body')!==-1||s.indexOf('데콜테')!==-1||s.indexOf('décolleté')!==-1||s.indexOf('decollete')!==-1) return '바디 케어';
+  if(s.indexOf('미백')!==-1||s.indexOf('whitening')!==-1) return '미백 케어';
+  if(s.indexOf('속눈썹')!==-1||s.indexOf('lash')!==-1) return '속눈썹펌';
   if(s.indexOf('90')!==-1) return '퍼스널 피부 컨설팅 90분';
   if(s.indexOf('60')!==-1) return '프리미엄 케어 60분';
   if(s.indexOf('50')!==-1) return '기본 케어 50분';
-  // 3) 이름 폴백 (프리미엄을 컨설팅보다 먼저)
-  if(s.indexOf('프리미엄')!==-1 || s.indexOf('premium')!==-1) return '프리미엄 케어 60분';
-  if(s.indexOf('컨설팅')!==-1 || s.indexOf('consult')!==-1) return '퍼스널 피부 컨설팅 90분';
-  if(s.indexOf('기본')!==-1 || s.indexOf('베이직')!==-1 || s.indexOf('basic')!==-1) return '기본 케어 50분';
+  if(s.indexOf('프리미엄')!==-1||s.indexOf('premium')!==-1) return '프리미엄 케어 60분';
+  if(s.indexOf('컨설팅')!==-1||s.indexOf('consult')!==-1) return '퍼스널 피부 컨설팅 90분';
+  if(s.indexOf('시그니처')!==-1||s.indexOf('signature')!==-1||s.indexOf('기본')!==-1||s.indexOf('베이직')!==-1||s.indexOf('basic')!==-1) return '기본 케어 50분';
   return p;
 }
-
-// ═══════════════════════════════════════════════════════════════
-// ★ 룸 번호 정규화 — 과거 "4"로 저장된 예약을 표시 단계에서 "6"으로 교정
-//   (DB는 안 건드리고, 화면에서만 6인룸으로 잡히게)
-// ═══════════════════════════════════════════════════════════════
-function normalizeRoom(r){
-  var n = parseInt(r);
-  if(n===4) return 6;     // 레거시 4인룸 → 3층(6)
-  if(n===8) return 8;     // 4층
-  if(n===6) return 6;     // 3층
-  if(n===2) return 2;     // 바디
-  return n||6;
+function normalizeRoom(r,program){
+  var n=parseInt(r);
+  if(n===4) return 6;
+  if(n===8||n===6||n===2) return n;
+  if(program==='바디 케어') return 2;   // 룸 정보 없는 외부 예약
+  return 6;
+}
+function normalizeSource(s){
+  if(!s) return '';
+  var v=String(s).toLowerCase();
+  if(v==='airbnb') return 'Airbnb';
+  if(v==='acuity') return 'Acuity';
+  if(v==='klook') return 'Klook';
+  return s;
+}
+/* "13:10","13시 10분","1:10 PM","오후 4:30" → "HH:MM" (분 보존) */
+function parseTime(v){
+  if(v===undefined||v===null) return null;
+  var s=String(v).trim();
+  var iso=s.match(/T(\d{2}):(\d{2})/);          // startIso 형태
+  if(iso){ return iso[1]+':'+iso[2]; }
+  var m=s.match(/(\d{1,2})\s*[:시]\s*(\d{1,2})?/);
+  if(!m) return null;
+  var hh=parseInt(m[1]), mm=m[2]?parseInt(m[2]):0;
+  if(/pm|오후/i.test(s)&&hh<12) hh+=12;
+  if(/am|오전/i.test(s)&&hh===12) hh=0;
+  mm=Math.round(mm/10)*10; if(mm>=60){mm=0;hh++;}
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
 }
 
+/* ═══════════ 시간 유틸 ═══════════ */
+function toMin(t){ var p=String(t||'0:0').split(':'); return (parseInt(p[0])||0)*60+(parseInt(p[1])||0); }
+function toStr(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function getDur(b){ return parseInt(b.dur)||PROGRAM_DUR[b.program]||DEFAULT_DUR; }
+function hourOf(t){ return Math.floor(toMin(t)/60); }
+function isValidSlot(s){ return /^\d{1,2}:\d{2}$/.test(String(s||'')); }
+
+/* ═══════════ 상태 ═══════════ */
 var bookings=[], selY=new Date().getFullYear(), selM=new Date().getMonth(), selDate=null;
-var mRoom=null, mSlot=null, editId=null, mBeds=[];
+var mRoom=null, mSlot=null, mHour=null, mMin=null, editId=null, mBeds=[];
 
 function getTODAY(){ var n=new Date(); return fmt(n.getFullYear(),n.getMonth(),n.getDate()); }
 function fmt(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
-function slotBks(date,slot){ return bookings.filter(function(b){return b.date===date&&b.slot===slot;}); }
-function roomRem(date,slot,room,excl){
-  var used=slotBks(date,slot).filter(function(b){return b.room===room&&b.id!==excl;}).reduce(function(s,b){return s+b.pax;},0);
+
+/* ═══════════ 겹침 기반 점유 ═══════════ */
+function bksOverlap(date,startMin,dur,room,excl){
+  var end=startMin+dur;
+  return bookings.filter(function(b){
+    if(b.date!==date) return false;
+    if(excl&&b.id===excl) return false;
+    if(room!==undefined&&room!==null&&b.room!==room) return false;
+    if(!isValidSlot(b.slot)) return false;
+    var bs=toMin(b.slot), be=bs+getDur(b);
+    return bs<end&&be>startMin;
+  });
+}
+function roomRemAt(date,startMin,dur,room,excl){
+  var used=bksOverlap(date,startMin,dur,room,excl).reduce(function(s,b){return s+(parseInt(b.pax)||1);},0);
   return ROOM_CAP[room]-used;
 }
-function dayStatus(date){
-  var full=0;
-  SLOTS.forEach(function(s){ if(roomRem(date,s,8)===0)full++; if(roomRem(date,s,6)===0)full++; if(roomRem(date,s,2)===0)full++; });
-  return full===0?'none':full===SLOTS.length*3?'full':'partial';
+function roomRemHour(date,hour,room,excl){
+  var min=ROOM_CAP[room];
+  MINUTES.forEach(function(mm){
+    var r=roomRemAt(date,hour*60+mm,10,room,excl);
+    if(r<min) min=r;
+  });
+  return min;
 }
-
-// ★ 베드 사용 현황 조회 ★
-function takenBeds(date, slot, room, exclId) {
-  var beds = [];
-  slotBks(date, slot).filter(function(b){ return b.room === room && b.id !== exclId; }).forEach(function(b){
-    if (b.beds && b.beds.length) beds = beds.concat(b.beds);
+function hourBks(date,hour,room){
+  return bookings.filter(function(b){
+    if(b.date!==date||!isValidSlot(b.slot)) return false;
+    if(room!==undefined&&b.room!==room) return false;
+    return hourOf(b.slot)===hour;
+  }).sort(function(a,b){ return toMin(a.slot)-toMin(b.slot); });
+}
+function dayStatus(date){
+  var full=0, total=HOURS.length*3;
+  HOURS.forEach(function(h){
+    if(roomRemHour(date,h,8)<=0) full++;
+    if(roomRemHour(date,h,6)<=0) full++;
+    if(roomRemHour(date,h,2)<=0) full++;
+  });
+  return full===0?'none':full===total?'full':'partial';
+}
+function takenBeds(date,slot,room,exclId,dur){
+  var beds=[];
+  bksOverlap(date,toMin(slot),dur||DEFAULT_DUR,room,exclId).forEach(function(b){
+    if(b.beds&&b.beds.length) beds=beds.concat(b.beds);
   });
   return beds;
 }
 
-// ★ 베드 선택 UI 렌더 ★
-function renderBedPicker() {
-  var picker = document.getElementById('bedPicker');
-  var hint = document.getElementById('bedHint');
-  var btnsEl = document.getElementById('bedButtons');
-  var date = document.getElementById('mDate').value;
-
-  if (!mRoom || !mSlot || !date) {
-    picker.classList.remove('visible');
-    hint.textContent = '룸과 시간을 선택하면 베드를 배정할 수 있어요';
-    return;
-  }
-
-  picker.classList.add('visible');
-  var maxBed = mRoom; // 4층=8 · 3층=6 · 바디=2
-  var taken = takenBeds(date, mSlot, mRoom, editId);
-  var roomLabel = zoneLabel(mRoom);
-  var pax = parseInt(document.getElementById('mPax').value) || 0;
-
-  var html = '<div class="bed-room-label">🛏️ ' + roomLabel + ' 베드 선택' + (pax ? ' (' + pax + '명 → ' + pax + '개 선택)' : '') + '</div>';
-  html += '<div class="bed-grid">';
-  for (var i = 1; i <= maxBed; i++) {
-    var isTaken = taken.indexOf(i) !== -1;
-    var isActive = mBeds.indexOf(i) !== -1;
-    html += '<button class="bed-btn' + (isActive ? ' active' : '') + (isTaken ? ' taken' : '') + '" onclick="toggleBed(' + i + ',' + isTaken + ')">' + i + '</button>';
-  }
-  html += '</div>';
-  btnsEl.innerHTML = html;
-  hint.textContent = taken.length ? '회색 베드는 이미 배정됨' : '';
+/* ═══════════ 베드 ═══════════ */
+function curDur(){
+  var v=parseInt(document.getElementById('mDur').value);
+  if(v) return v;
+  return PROGRAM_DUR[document.getElementById('mProgram').value]||DEFAULT_DUR;
 }
-
-window.toggleBed = function(num, isTaken) {
-  if (isTaken) return;
-  var idx = mBeds.indexOf(num);
-  if (idx !== -1) { mBeds.splice(idx, 1); }
-  else { mBeds.push(num); }
+function renderBedPicker(){
+  var picker=document.getElementById('bedPicker'), hint=document.getElementById('bedHint'), btnsEl=document.getElementById('bedButtons');
+  var date=document.getElementById('mDate').value;
+  if(!mRoom||!mSlot||!date){ picker.classList.remove('visible'); hint.textContent='룸과 시간을 선택하면 베드를 배정할 수 있어요'; return; }
+  picker.classList.add('visible');
+  var maxBed=mRoom, taken=takenBeds(date,mSlot,mRoom,editId,curDur());
+  var pax=parseInt(document.getElementById('mPax').value)||0;
+  var html='<div class="bed-room-label">🛏️ '+zoneLabel(mRoom)+' 베드 선택'+(pax?' ('+pax+'명 → '+pax+'개 선택)':'')+'</div><div class="bed-grid">';
+  for(var i=1;i<=maxBed;i++){
+    var isTaken=taken.indexOf(i)!==-1, isActive=mBeds.indexOf(i)!==-1;
+    html+='<button class="bed-btn'+(isActive?' active':'')+(isTaken?' overlap':'')+'" onclick="toggleBed('+i+')">'+i+'</button>';
+  }
+  html+='</div>';
+  btnsEl.innerHTML=html;
+  hint.innerHTML=taken.length?'<span style="color:var(--yellow)">노란 베드는 시간이 겹쳐요 — 필요하면 그대로 배정 가능</span>':'';
+}
+window.toggleBed=function(num){
+  var i=mBeds.indexOf(num);
+  if(i!==-1) mBeds.splice(i,1); else mBeds.push(num);
   mBeds.sort(function(a,b){return a-b;});
   renderBedPicker();
 };
 
-function setSyncStatus(status) {
+/* ═══════════ 동기화 ═══════════ */
+function setSyncStatus(st){
   var dot=document.getElementById('syncDot'), label=document.getElementById('syncLabel');
-  if(status==='connected'){ dot.className='sync-dot connected'; label.textContent='실시간 동기화 중'; }
-  else if(status==='syncing'){ dot.className='sync-dot syncing'; label.textContent='저장 중...'; }
-  else if(status==='error'){ dot.className='sync-dot error'; label.textContent='연결 오류 — 재시도 중'; }
+  if(st==='connected'){ dot.className='sync-dot connected'; label.textContent='실시간 동기화 중'; }
+  else if(st==='syncing'){ dot.className='sync-dot syncing'; label.textContent='저장 중...'; }
+  else if(st==='error'){ dot.className='sync-dot error'; label.textContent='연결 오류 — 재시도 중'; }
   else { dot.className='sync-dot'; label.textContent='Firebase 연결 중...'; }
 }
 
 onValue(ref(db,'bookings'),(snap)=>{
-  const data=snap.val();
-  bookings=data?Object.values(data):[];
-  // ── 데이터 정규화: pax 숫자 보장 + slot "HH:00" 통일 + program 표준화 + room(4→6) 교정 ──
-  bookings.forEach(function(b){
-    b.pax = parseInt(b.pax) || 1;                  // 깨진 pax → 1
-    if (b.slot) {
-      var hh = String(b.slot).match(/(\d{1,2})/);  // "13:00:00","13시" 등에서 시 추출
-      if (hh) b.slot = String(parseInt(hh[1])).padStart(2,'0') + ':00';
+  const data=snap.val()||{};
+  bookings=Object.keys(data).map(function(key){
+    var b=Object.assign({},data[key]);
+    if(!b.id) b.id=key;                                   // 외부 스크립트가 넣은 레코드
+    b.pax=parseInt(b.pax)||1;
+    b.program=normalizeProgram(b.program||b.service);      // Airbnb는 service 필드
+    var t=parseTime(b.slot)||parseTime(b.time)||parseTime(b.startIso);
+    if(t) b.slot=t;
+    if(!b.date&&b.startIso) b.date=String(b.startIso).slice(0,10);
+    if(!b.dur&&b.startIso&&b.endIso){
+      var d=(new Date(b.endIso)-new Date(b.startIso))/60000;
+      if(d>0&&d<400) b.dur=Math.round(d);
     }
-    b.program = normalizeProgram(b.program);       // ★ "60"→프리미엄 오분류 등 표시 단계에서 교정
-    b.room = normalizeRoom(b.room);                // ★ 기존 4인룸 예약 → 6인룸으로 표시
+    b.dur=parseInt(b.dur)||PROGRAM_DUR[b.program]||DEFAULT_DUR;
+    b.room=normalizeRoom(b.room,b.program);
+    b.source=normalizeSource(b.source);
+    return b;
   });
   renderAll();
   setSyncStatus('connected');
@@ -504,9 +523,9 @@ onValue(ref(db,'bookings'),(snap)=>{
 
 async function saveToFirebase(bk){ setSyncStatus('syncing'); await set(ref(db,'bookings/'+bk.id),bk); }
 async function deleteFromFirebase(id){ setSyncStatus('syncing'); await remove(ref(db,'bookings/'+id)); }
-
 function renderAll(){ renderCal(); renderToday(); if(selDate) renderDay(); }
 
+/* ═══════════ 탭 ═══════════ */
 function goTab(tab){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   ['today','cal','day'].forEach(function(t){ var el=document.getElementById('tab-'+t); if(el)el.classList.remove('active'); });
@@ -515,32 +534,65 @@ function goTab(tab){
   if(tab==='day'){ document.getElementById('scrDay').classList.add('active'); document.getElementById('tab-day').classList.add('active'); renderDay(); }
 }
 
+/* ═══════════ 렌더 ═══════════ */
+function bkMini(b){
+  var sc=SRC_CLS[b.source]||'';
+  var dur=getDur(b);
+  var ov=isValidSlot(b.slot)&&bksOverlap(b.date,toMin(b.slot),dur,b.room,b.id).length>0;
+  var timeStr=isValidSlot(b.slot)?b.slot+'–'+toStr(toMin(b.slot)+dur):'??:??';
+  var bedTag=b.beds&&b.beds.length?'<span class="btag btag-bed">🛏️ '+b.beds.join(',')+'번</span>':'';
+  var isClass=b.program&&CLASS_PROGRAMS.indexOf(b.program)!==-1;
+  var progTag=b.program?'<span class="btag '+(isClass?'btag-class':'')+'">'+(isClass?'🎨 ':'')+b.program+'</span>':'';
+  var ovTag=ov?'<span class="btag btag-ov">⚠ 겹침</span>':'';
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name"><span class="bk-time'+(ov?' bk-ov':'')+'">'+timeStr+'</span>'+(b.name||'이름 미정')+' ('+b.pax+'명)</div>'
+    +'<div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div>'
+    +'<div class="bk-tags">'+bedTag+ovTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+progTag
+    +(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
+}
+function zoneBlockHTML(date,hour,room){
+  var rem=roomRemHour(date,hour,room), cap=ROOM_CAP[room], used=Math.max(0,cap-rem);
+  var bks=hourBks(date,hour,room);
+  var pips=''; for(var n=1;n<=cap;n++){ pips+='<div class="pip '+(n<=used?'on'+room:'')+'"></div>'; }
+  return '<div class="ts-room"><div class="ts-rlabel"><span class="rb rb'+room+'">'+zoneLabel(room)+'</span> '+rem+'/'+cap+'</div><div class="pips">'+pips+'</div>'
+    +(bks.length?bks.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div>';
+}
+function slotCardHTML(date,hour,i){
+  var rem=roomRemHour(date,hour,8)+roomRemHour(date,hour,6)+roomRemHour(date,hour,2);
+  var sc=rem<=0?'ts-full':rem<4?'ts-partial':'ts-open';
+  var sl=rem<=0?'빽빽함':rem<3?'잔여 적음':'예약 가능';
+  return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+HOUR_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div>'
+    +'<span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/'+TOTAL_CAP+'</span>'
+    +'<button class="ts-add" onclick="openModal(\''+date+'\','+hour+')">+</button></div>'
+    +'<div class="ts-rooms">'+zoneBlockHTML(date,hour,8)+'<div class="ts-divider"></div>'+zoneBlockHTML(date,hour,6)+'<div class="ts-divider"></div>'+zoneBlockHTML(date,hour,2)+'</div></div>';
+}
 function renderToday(){
   var date=getTODAY(), now=new Date();
   document.getElementById('todayTitle').textContent=(now.getMonth()+1)+'월 '+now.getDate()+'일 오늘';
-  var totalPax=bookings.filter(function(b){return b.date===date;}).reduce(function(s,b){return s+b.pax;},0);
-  var totalSlots=SLOTS.filter(function(s){return slotBks(date,s).length>0;}).length;
-  var fullSlots=0;
-  SLOTS.forEach(function(s){ if(roomRem(date,s,2)===0&&roomRem(date,s,6)===0) fullSlots++; });
-  document.getElementById('todaySummary').innerHTML='<div class="sum-card"><div class="sum-num" style="color:var(--room2)">'+totalPax+'</div><div class="sum-label">총 고객 수</div></div><div class="sum-card"><div class="sum-num" style="color:var(--green)">'+totalSlots+'</div><div class="sum-label">예약 슬롯</div></div><div class="sum-card"><div class="sum-num" style="color:var(--red)">'+fullSlots+'</div><div class="sum-label">마감 슬롯</div></div>';
-  var slotHtml=SLOTS.map(function(slot,i){return slotCardHTML(date,slot,i);}).join('');
-  // ── 슬롯에 안 잡히는(형식 깨진) 오늘 예약 표시 ──
-  var orphans=bookings.filter(function(b){return b.date===date && SLOTS.indexOf(b.slot)===-1;});
+  var todays=bookings.filter(function(b){return b.date===date;});
+  var totalPax=todays.reduce(function(s,b){return s+(parseInt(b.pax)||1);},0);
+  var usedHours=HOURS.filter(function(h){return hourBks(date,h).length>0;}).length;
+  var tight=0;
+  HOURS.forEach(function(h){ if(roomRemHour(date,h,8)<=0&&roomRemHour(date,h,6)<=0&&roomRemHour(date,h,2)<=0) tight++; });
+  document.getElementById('todaySummary').innerHTML=
+    '<div class="sum-card"><div class="sum-num" style="color:var(--room2)">'+totalPax+'</div><div class="sum-label">총 고객 수</div></div>'
+   +'<div class="sum-card"><div class="sum-num" style="color:var(--green)">'+usedHours+'</div><div class="sum-label">예약 시간대</div></div>'
+   +'<div class="sum-card"><div class="sum-num" style="color:var(--red)">'+tight+'</div><div class="sum-label">빽빽한 시간</div></div>';
+  var html=HOURS.map(function(h,i){return slotCardHTML(date,h,i);}).join('');
+  var orphans=todays.filter(function(b){ return !isValidSlot(b.slot)||HOURS.indexOf(hourOf(b.slot))===-1; });
   if(orphans.length){
-    slotHtml+='<div class="ts-card" style="border:2px solid var(--red)"><div class="ts-hdr"><div class="ts-time">⚠️ 시간 미확인 ('+orphans.length+')</div><div class="ts-badge ts-full">확인 필요</div></div><div style="padding:6px 12px 10px">'
-      +orphans.map(function(b){return bkMini(b)+'<div style="font-size:11px;color:var(--mid);margin:-4px 0 10px 4px">raw slot: "'+(b.slot===undefined?'(없음)':b.slot)+'" · id: '+b.id+'</div>';}).join('')
+    html+='<div class="ts-card" style="border:2px solid var(--red)"><div class="ts-hdr"><div class="ts-time">⚠️ 시간 미확인 ('+orphans.length+')</div><div class="ts-badge ts-full">확인 필요</div></div><div style="padding:6px 12px 10px">'
+      +orphans.map(function(b){return bkMini(b)+'<div style="font-size:11px;color:var(--mid);margin:-4px 0 10px 4px">raw: "'+(b.slot===undefined?'(없음)':b.slot)+'" · id: '+b.id+'</div>';}).join('')
       +'</div></div>';
   }
-  document.getElementById('todaySlots').innerHTML=slotHtml;
+  document.getElementById('todaySlots').innerHTML=html;
 }
-
 var MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 function changeMonth(d){ selM+=d; if(selM>11){selM=0;selY++;} if(selM<0){selM=11;selY--;} renderCal(); }
 function renderCal(){
   document.getElementById('calLabel').textContent=selY+'년 '+MO[selM];
   var cells=document.getElementById('calCells'); cells.innerHTML='';
   var first=new Date(selY,selM,1).getDay(), days=new Date(selY,selM+1,0).getDate(), today=getTODAY();
-  for(var i=0;i<first;i++){ var el=document.createElement('div'); el.className='cal-cell empty'; cells.appendChild(el); }
+  for(var i=0;i<first;i++){ var e=document.createElement('div'); e.className='cal-cell empty'; cells.appendChild(e); }
   for(var d=1;d<=days;d++){
     var key=fmt(selY,selM,d), st=dayStatus(key), hasB=bookings.some(function(b){return b.date===key;});
     var col=st==='full'?'var(--red)':st==='partial'?'var(--accent)':'var(--green)';
@@ -552,57 +604,37 @@ function renderCal(){
   }
 }
 function selectDate(key){ selDate=key; renderCal(); goTab('day'); }
-
 function renderDay(){
   if(!selDate){ document.getElementById('slotList').innerHTML='<div class="no-sel"><div class="ni">📅</div><p>캘린더에서 날짜를 선택하세요</p></div>'; return; }
-  var parts=selDate.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var p=selDate.split('-'), y=+p[0], m=+p[1], d=+p[2];
   var dt=new Date(y,m-1,d), wds=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   document.getElementById('dayTitle').textContent=m+'월 '+d+'일 ('+wds[dt.getDay()]+')';
-  document.getElementById('slotList').innerHTML=SLOTS.map(function(slot,i){return slotCardHTML(selDate,slot,i);}).join('');
+  document.getElementById('slotList').innerHTML=HOURS.map(function(h,i){return slotCardHTML(selDate,h,i);}).join('');
 }
 
-function zoneBlockHTML(date,slot,room){
-  var rem=roomRem(date,slot,room), cap=ROOM_CAP[room], used=cap-rem;
-  var bks=slotBks(date,slot).filter(function(b){return b.room===room;});
-  var pips=''; for(var n=1;n<=cap;n++){ pips+='<div class="pip '+(n<=used?'on'+room:'')+'"></div>'; }
-  return '<div class="ts-room"><div class="ts-rlabel"><span class="rb rb'+room+'">'+zoneLabel(room)+'</span> '+rem+'/'+cap+'</div><div class="pips">'+pips+'</div>'+(bks.length?bks.map(bkMini).join(''):'<div class="empty-r">예약 없음</div>')+'</div>';
-}
-function slotCardHTML(date,slot,i){
-  var rem=roomRem(date,slot,8)+roomRem(date,slot,6)+roomRem(date,slot,2);
-  var sc=rem===0?'ts-full':rem<4?'ts-partial':'ts-open', sl=rem===0?'마감':rem<3?'잔여 적음':'예약 가능';
-  return '<div class="ts-card"><div class="ts-hdr"><div class="ts-time">'+SLOT_LBL[i]+'</div><div class="ts-badge '+sc+'">'+sl+'</div><span style="margin-left:auto;font-size:11px;color:var(--mid);margin-right:6px">'+rem+'/'+TOTAL_CAP+'</span><button class="ts-add" onclick="openModal(\''+date+'\',\''+slot+'\')">+</button></div><div class="ts-rooms">'+zoneBlockHTML(date,slot,8)+'<div class="ts-divider"></div>'+zoneBlockHTML(date,slot,6)+'<div class="ts-divider"></div>'+zoneBlockHTML(date,slot,2)+'</div></div>';
-}
-
-// ★ 베드 번호 + 클래스 태그 색 구분 표시 ★
-function bkMini(b){
-  var sc=SRC_CLS[b.source]||'';
-  var bedTag = b.beds && b.beds.length ? '<span class="btag btag-bed">🛏️ ' + b.beds.join(',') + '번</span>' : '';
-  var isClass = b.program && CLASS_PROGRAMS.indexOf(b.program) !== -1;
-  var progTag = b.program ? '<span class="btag '+(isClass?'btag-class':'')+'">'+(isClass?'🎨 ':'')+b.program+'</span>' : '';
-  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name">'+(b.name||'이름 미정')+' ('+b.pax+'명)</div><div class="bk-acts"><button class="bk-btn" onclick="openEdit(\''+b.id+'\')">✏️</button><button class="bk-btn" onclick="delB(\''+b.id+'\')">✕</button></div></div><div class="bk-tags">'+bedTag+(b.lang?'<span class="btag">'+b.lang+'</span>':'')+progTag+(b.source?'<span class="btag '+sc+'">'+b.source+'</span>':'')+(b.note?'<span class="btag">📝'+b.note+'</span>':'')+'</div></div>';
-}
-
-// ★ 공유 텍스트에 베드 번호 포함 ★
+/* ═══════════ 공유 ═══════════ */
 function buildShareText(date){
-  var parts=date.split('-'), y=+parts[0], m=+parts[1], d=+parts[2];
+  var p=date.split('-'), y=+p[0], m=+p[1], d=+p[2];
   var dt=new Date(y,m-1,d), wds=['일','월','화','수','목','금','토'];
   var txt='🌿 Laurel Studio 예약 현황\n📅 '+m+'월 '+d+'일 ('+wds[dt.getDay()]+')\n'+'─'.repeat(22)+'\n';
   var totalPax=0;
-  SLOTS.forEach(function(slot,i){
-    var bks=slotBks(date,slot); if(!bks.length) return;
-    var r8=roomRem(date,slot,8), r6=roomRem(date,slot,6), r2=roomRem(date,slot,2);
-    txt+='\n⏰ '+SLOT_LBL[i]+'  (잔여 '+(r8+r6+r2)+'/'+TOTAL_CAP+')\n';
-    bks.forEach(function(b){ totalPax+=b.pax;
-      var bedStr = b.beds && b.beds.length ? ' | 🛏️' + b.beds.join(',') + '번' : '';
-      txt+='  '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '+(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+'\n';
+  HOURS.forEach(function(h,i){
+    var bks=hourBks(date,h); if(!bks.length) return;
+    var rem=roomRemHour(date,h,8)+roomRemHour(date,h,6)+roomRemHour(date,h,2);
+    txt+='\n⏰ '+HOUR_LBL[i]+'  (잔여 '+rem+'/'+TOTAL_CAP+')\n';
+    bks.forEach(function(b){
+      totalPax+=(parseInt(b.pax)||1);
+      var dur=getDur(b);
+      var bedStr=b.beds&&b.beds.length?' | 🛏️'+b.beds.join(',')+'번':'';
+      txt+='  '+b.slot+'–'+toStr(toMin(b.slot)+dur)+' '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '
+        +(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+'\n';
     });
   });
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
   return txt;
 }
-
 var shareDate=null;
-function openShare(date){ shareDate=date||getTODAY(); var parts=shareDate.split('-'); document.getElementById('shareTitle').textContent=parts[1]+'월 '+parts[2]+'일 예약 현황 공유'; document.getElementById('shareText').textContent=buildShareText(shareDate); document.getElementById('sharePopup').classList.add('open'); }
+function openShare(date){ shareDate=date||getTODAY(); var p=shareDate.split('-'); document.getElementById('shareTitle').textContent=p[1]+'월 '+p[2]+'일 예약 현황 공유'; document.getElementById('shareText').textContent=buildShareText(shareDate); document.getElementById('sharePopup').classList.add('open'); }
 function closeShare(){ document.getElementById('sharePopup').classList.remove('open'); }
 function copyShare(){
   var txt=document.getElementById('shareText').textContent, btn=document.querySelector('.sb-copy');
@@ -612,24 +644,71 @@ function copyShare(){
   setTimeout(function(){ btn.textContent='📋 텍스트 복사 (카카오/왓츠앱 붙여넣기)'; },2000);
 }
 
-function openModal(date,slot){
-  editId=null; mRoom=null; mSlot=slot||null; mBeds=[];
+/* ═══════════ 시간 선택 (시 → 분) ═══════════ */
+function renderTimePicker(active){
+  var date=document.getElementById('mDate').value;
+  if(active&&isValidSlot(active)){ mHour=hourOf(active); mMin=toMin(active)%60; mSlot=active; }
+  document.getElementById('timePicker').innerHTML=HOURS.map(function(h,i){
+    var rem=date?roomRemHour(date,h,8,editId)+roomRemHour(date,h,6,editId)+roomRemHour(date,h,2,editId):TOTAL_CAP;
+    var tight=rem<=0;
+    return '<div class="tpick'+(tight?' t-full':'')+(mHour===h?' active':'')+'" data-h="'+h+'" onclick="pickHour('+h+')">'
+      +'<div class="tt">'+HOUR_LBL[i]+'</div><div class="tr">'+(tight?'빽빽':'잔'+rem)+'</div></div>';
+  }).join('');
+  renderMinPicker();
+}
+function renderMinPicker(){
+  var box=document.getElementById('minPicker'), date=document.getElementById('mDate').value;
+  var pt=document.getElementById('pickedTime');
+  if(mHour===null){ box.innerHTML=''; pt.textContent=''; return; }
+  var dur=curDur();
+  box.innerHTML=MINUTES.map(function(mm){
+    var start=mHour*60+mm;
+    var over=start+dur>CLOSE_MIN;
+    var r=date?(roomRemAt(date,start,dur,8,editId)+roomRemAt(date,start,dur,6,editId)+roomRemAt(date,start,dur,2,editId)):TOTAL_CAP;
+    var warn=r<=0||over;
+    return '<div class="mpick'+(warn?' m-warn':'')+(mMin===mm?' active':'')+'" onclick="pickMin('+mm+')">:'+String(mm).padStart(2,'0')+'</div>';
+  }).join('');
+  if(mSlot){
+    var end=toMin(mSlot)+dur;
+    pt.innerHTML='선택: '+mSlot+' – '+toStr(end)+' ('+dur+'분)'+(end>CLOSE_MIN?' <span style="color:var(--yellow)">· 영업 종료 이후까지</span>':'');
+  } else { pt.textContent='분을 선택하세요'; }
+}
+function pickHour(h){
+  mHour=h; mMin=null; mSlot=null; mBeds=[];
+  document.querySelectorAll('.tpick').forEach(function(el){ el.classList.toggle('active',parseInt(el.dataset.h)===h); });
+  renderMinPicker(); checkCap(); renderBedPicker();
+}
+function pickMin(mm){
+  mMin=mm; mSlot=toStr(mHour*60+mm); mBeds=[];
+  renderMinPicker(); checkCap(); renderBedPicker();
+}
+function onDurChange(){ renderMinPicker(); checkCap(); renderBedPicker(); }
+function onProgramChange(){ renderMinPicker(); checkCap(); renderBedPicker(); }
+
+/* ═══════════ 모달 ═══════════ */
+function openModal(date,hour){
+  editId=null; mRoom=null; mSlot=null; mMin=null; mBeds=[];
+  mHour=(hour!==undefined&&hour!==null)?hour:null;
   document.getElementById('sheetTitle').textContent='예약 추가';
   document.getElementById('editChip').style.display='none';
   document.getElementById('sheetFoot').innerHTML='<button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
   resetForm(date||selDate||getTODAY());
   document.getElementById('overlay').classList.add('open');
-  if(slot){ setTimeout(function(){ var el=document.querySelector('.tpick[data-s="'+slot+'"]'); if(el&&!el.classList.contains('t-full'))el.click(); },60); }
 }
 function openEdit(id){
   var b=bookings.find(function(x){return x.id===id;}); if(!b) return;
   editId=id; mRoom=b.room; mSlot=b.slot; mBeds=b.beds?b.beds.slice():[];
+  mHour=isValidSlot(b.slot)?hourOf(b.slot):null; mMin=isValidSlot(b.slot)?toMin(b.slot)%60:null;
   document.getElementById('sheetTitle').textContent='예약 수정';
   document.getElementById('editChip').style.display='inline-flex';
   document.getElementById('sheetFoot').innerHTML='<button class="btn-del-bk" onclick="delB(\''+id+'\',true)">삭제</button><button class="btn-cancel" onclick="closeModal()">취소</button><button class="btn-save" onclick="saveB()">저장</button>';
-  document.getElementById('mDate').value=b.date; document.getElementById('mName').value=b.name||'';
-  document.getElementById('mLang').value=b.lang||''; document.getElementById('mProgram').value=b.program||'';
-  document.getElementById('mSource').value=b.source||''; document.getElementById('mNote').value=b.note||'';
+  document.getElementById('mDate').value=b.date||getTODAY();
+  document.getElementById('mName').value=b.name||'';
+  document.getElementById('mLang').value=b.lang||'';
+  document.getElementById('mProgram').value=b.program||'';
+  document.getElementById('mSource').value=b.source||'';
+  document.getElementById('mNote').value=b.note||'';
+  document.getElementById('mDur').value=b.dur||'';
   document.getElementById('sheetAlert').innerHTML='';
   renderTimePicker(b.slot);
   document.getElementById('rp8').className='rpick'+(b.room===8?' active':'');
@@ -637,27 +716,21 @@ function openEdit(id){
   document.getElementById('rp2').className='rpick'+(b.room===2?' active':'');
   var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
   for(var i=1;i<=b.room;i++) pax.innerHTML+='<option value="'+i+'"'+(i===b.pax?' selected':'')+'>'+i+'명</option>';
-  checkCap(); renderBedPicker(); document.getElementById('overlay').classList.add('open');
+  checkCap(); renderBedPicker();
+  document.getElementById('overlay').classList.add('open');
 }
 function resetForm(date){
-  document.getElementById('mDate').value=date; document.getElementById('mName').value=''; document.getElementById('mNote').value='';
+  document.getElementById('mDate').value=date;
+  document.getElementById('mName').value=''; document.getElementById('mNote').value='';
   document.getElementById('mPax').innerHTML='<option value="">룸 먼저 선택</option>';
-  document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0; document.getElementById('mSource').selectedIndex=0;
+  document.getElementById('mLang').selectedIndex=0; document.getElementById('mProgram').selectedIndex=0;
+  document.getElementById('mSource').selectedIndex=0; document.getElementById('mDur').value='';
   document.getElementById('sheetAlert').innerHTML='';
   document.getElementById('rp8').className='rpick'; document.getElementById('rp6').className='rpick'; document.getElementById('rp2').className='rpick';
   mBeds=[];
   renderTimePicker(); renderBedPicker();
 }
 function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; mBeds=[]; }
-
-function renderTimePicker(active){
-  var date=document.getElementById('mDate').value, act=active||mSlot;
-  document.getElementById('timePicker').innerHTML=SLOTS.map(function(s,i){
-    var r8=date?roomRem(date,s,8,editId):ROOM_CAP[8], r6=date?roomRem(date,s,6,editId):ROOM_CAP[6], r2=date?roomRem(date,s,2,editId):ROOM_CAP[2], full=r8===0&&r6===0&&r2===0;
-    return '<div class="tpick'+(full?' t-full':'')+(act===s?' active':'')+'" data-s="'+s+'" onclick="pickSlot(\''+s+'\','+(full?'true':'false')+')"><div class="tt">'+SLOT_LBL[i]+'</div><div class="tr">'+(full?'마감':'잔'+(r8+r6+r2))+'</div></div>';
-  }).join('');
-}
-function pickSlot(s,full){ if(full&&!editId)return; mSlot=s; mBeds=[]; document.querySelectorAll('.tpick').forEach(function(el){el.classList.toggle('active',el.dataset.s===s);}); checkCap(); renderBedPicker(); }
 function pickRoom(n){
   mRoom=n; mBeds=[];
   document.getElementById('rp8').className='rpick'+(n===8?' active':'');
@@ -667,46 +740,55 @@ function pickRoom(n){
   for(var i=1;i<=n;i++) pax.innerHTML+='<option value="'+i+'">'+i+'명</option>';
   checkCap(); renderBedPicker();
 }
-function onDateChange(){ var d=document.getElementById('mDate').value; if(d){selDate=d;renderCal();} mSlot=null; mBeds=[]; renderTimePicker(); checkCap(); renderBedPicker(); }
+function onDateChange(){
+  var d=document.getElementById('mDate').value;
+  if(d){ selDate=d; renderCal(); }
+  mSlot=null; mMin=null; mBeds=[];
+  renderTimePicker(); checkCap(); renderBedPicker();
+}
 function checkCap(){
-  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
-  if(!date||!mRoom||!mSlot||!pax){al.innerHTML='';return;}
-  var rem=roomRem(date,mSlot,mRoom,editId);
-  if(rem===0) al.innerHTML='<div class="malert a-err">⚠️ '+zoneLabel(mRoom)+' 이 시간 마감됐어요</div>';
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0;
+  var al=document.getElementById('sheetAlert');
+  if(!date||!mRoom||!mSlot||!pax){ al.innerHTML=''; return; }
+  var dur=curDur(), rem=roomRemAt(date,toMin(mSlot),dur,mRoom,editId);
+  if(rem<=0) al.innerHTML='<div class="malert a-warn">⚠️ '+zoneLabel(mRoom)+' '+mSlot+'에 이미 자리가 다 찼어요 — 그래도 저장할 수 있어요</div>';
   else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+zoneLabel(mRoom)+' '+rem+'자리만 남아요</div>';
   else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
   renderBedPicker();
 }
-
 async function saveB(){
-  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0, al=document.getElementById('sheetAlert');
-  if(!date){al.innerHTML='<div class="malert a-err">날짜를 선택해주세요</div>';return;}
-  if(!mSlot){al.innerHTML='<div class="malert a-err">시간을 선택해주세요</div>';return;}
-  if(!mRoom){al.innerHTML='<div class="malert a-err">룸을 선택해주세요</div>';return;}
-  if(!pax){al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>';return;}
-  var rem=roomRem(date,mSlot,mRoom,editId);
-  if(pax>rem){al.innerHTML='<div class="malert a-err">'+zoneLabel(mRoom)+' 잔여('+rem+')를 초과해요</div>';return;}
-  var bk={id:editId||Date.now().toString(),date:date,slot:mSlot,room:mRoom,pax:pax,
+  var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0;
+  var al=document.getElementById('sheetAlert');
+  if(!date){ al.innerHTML='<div class="malert a-err">날짜를 선택해주세요</div>'; return; }
+  if(!mSlot){ al.innerHTML='<div class="malert a-err">시간(시·분)을 선택해주세요</div>'; return; }
+  if(!mRoom){ al.innerHTML='<div class="malert a-err">룸을 선택해주세요</div>'; return; }
+  if(!pax){ al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>'; return; }
+  var dur=curDur(), rem=roomRemAt(date,toMin(mSlot),dur,mRoom,editId);
+  if(pax>rem){
+    if(!confirm(zoneLabel(mRoom)+' '+mSlot+' 잔여 '+rem+'자리인데 '+pax+'명이에요.\n그래도 저장할까요?')) return;
+  }
+  var bk={ id:editId||Date.now().toString(), date:date, slot:mSlot, dur:dur, room:mRoom, pax:pax,
     beds:mBeds.length?mBeds:[],
-    name:document.getElementById('mName').value.trim(),lang:document.getElementById('mLang').value,
-    program:document.getElementById('mProgram').value,source:document.getElementById('mSource').value,
-    note:document.getElementById('mNote').value.trim()};
+    name:document.getElementById('mName').value.trim(),
+    lang:document.getElementById('mLang').value,
+    program:document.getElementById('mProgram').value,
+    source:document.getElementById('mSource').value,
+    note:document.getElementById('mNote').value.trim() };
   await saveToFirebase(bk);
   closeModal();
 }
-
 async function delB(id,fromModal){
-  if(!confirm('이 예약을 삭제할까요?'))return;
+  if(!confirm('이 예약을 삭제할까요?')) return;
   await deleteFromFirebase(id);
   if(fromModal) closeModal();
 }
 
 window.goTab=goTab; window.openModal=openModal; window.openEdit=openEdit;
 window.closeModal=closeModal; window.saveB=saveB; window.delB=delB;
-window.pickRoom=pickRoom; window.pickSlot=pickSlot; window.onDateChange=onDateChange;
+window.pickRoom=pickRoom; window.pickHour=pickHour; window.pickMin=pickMin;
+window.onDateChange=onDateChange; window.onDurChange=onDurChange; window.onProgramChange=onProgramChange;
 window.checkCap=checkCap; window.changeMonth=changeMonth; window.selectDate=selectDate;
 window.openShare=openShare; window.closeShare=closeShare; window.copyShare=copyShare;
-window.renderTimePicker=renderTimePicker;
 
 var now=new Date();
 document.getElementById('hdrDate').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
