@@ -322,6 +322,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0nJAcOV64dq2QT2BVSsGxis99VTA2eEI",
@@ -334,6 +335,90 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
+const auth = getAuth(app);
+
+/* ═══════════ 로그인 관문 ═══════════
+   여기서 멈춰 서서 로그인이 끝날 때까지 기다린다.
+   아래 코드는 로그인이 확인된 뒤에야 실행된다. 기존 로직은 손대지 않았다. */
+await (async function requireLogin(){
+  await setPersistence(auth, browserLocalPersistence);   // 한 번 로그인하면 브라우저가 기억
+
+  const already = await new Promise(function(res){
+    const stop = onAuthStateChanged(auth, function(u){ stop(); res(u); });
+  });
+  if(already) { mountSignOut(); return; }
+
+  const box = document.createElement('div');
+  box.id = 'laurel-login';
+  box.innerHTML =
+    '<style>'
+    + '#laurel-login{position:fixed;inset:0;z-index:99999;background:#faf9f7;display:flex;align-items:center;justify-content:center;padding:20px;'
+    + 'font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}'
+    + '#laurel-login .card{width:100%;max-width:340px;background:#fff;border:1px solid #e5e1da;border-radius:10px;padding:32px 26px;box-shadow:0 2px 14px rgba(0,0,0,.05);}'
+    + '#laurel-login h1{font-size:17px;margin:0 0 4px;color:#2f2b26;letter-spacing:.3px;}'
+    + '#laurel-login p.sub{font-size:12.5px;color:#8c857c;margin:0 0 22px;}'
+    + '#laurel-login label{display:block;font-size:11.5px;color:#8c857c;margin:0 0 5px;}'
+    + '#laurel-login input{width:100%;box-sizing:border-box;padding:11px 12px;font-size:15px;border:1px solid #ded9d1;border-radius:6px;margin-bottom:14px;font-family:inherit;background:#fff;color:#2f2b26;}'
+    + '#laurel-login input:focus{outline:none;border-color:#a89880;}'
+    + '#laurel-login button{width:100%;padding:12px;font-size:14.5px;border:0;border-radius:6px;background:#3f3a33;color:#fff;cursor:pointer;font-family:inherit;}'
+    + '#laurel-login button:disabled{opacity:.55;cursor:default;}'
+    + '#laurel-login .err{font-size:12.5px;color:#c0392b;min-height:17px;margin-top:11px;line-height:1.45;}'
+    + '</style>'
+    + '<div class="card">'
+    + '<h1>Laurel Studio</h1>'
+    + '<p class="sub">매장 계정으로 로그인해 주세요</p>'
+    + '<label>이메일</label><input id="lg-id" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">'
+    + '<label>비밀번호</label><input id="lg-pw" type="password" autocomplete="current-password">'
+    + '<button id="lg-go">로그인</button>'
+    + '<div class="err" id="lg-err"></div>'
+    + '</div>';
+  document.body.appendChild(box);
+
+  const idEl = box.querySelector('#lg-id');
+  const pwEl = box.querySelector('#lg-pw');
+  const btn  = box.querySelector('#lg-go');
+  const err  = box.querySelector('#lg-err');
+  idEl.focus();
+
+  await new Promise(function(done){
+    async function attempt(){
+      const id = idEl.value.trim(), pw = pwEl.value;
+      if(!id || !pw){ err.textContent = '이메일과 비밀번호를 모두 입력해 주세요'; return; }
+      btn.disabled = true; btn.textContent = '확인 중...'; err.textContent = '';
+      try{
+        await signInWithEmailAndPassword(auth, id, pw);
+        box.remove();
+        mountSignOut();
+        done();
+      }catch(e){
+        const c = e && e.code || '';
+        err.textContent =
+          (c === 'auth/invalid-email')                              ? '이메일 형식이 올바르지 않아요' :
+          (c === 'auth/too-many-requests')                          ? '시도가 너무 많아요 — 잠시 후 다시 해주세요' :
+          (c === 'auth/network-request-failed')                     ? '인터넷 연결을 확인해 주세요' :
+          (c === 'auth/user-disabled')                              ? '사용 중지된 계정이에요' :
+                                                                      '이메일 또는 비밀번호가 맞지 않아요';
+        btn.disabled = false; btn.textContent = '로그인';
+        pwEl.value = ''; pwEl.focus();
+      }
+    }
+    btn.addEventListener('click', attempt);
+    box.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') attempt(); });
+  });
+})();
+
+/* 헤더 구석에 작은 로그아웃 버튼 — 직원이 바뀌었을 때만 쓴다 */
+function mountSignOut(){
+  if(document.getElementById('laurel-signout')) return;
+  const b = document.createElement('button');
+  b.id = 'laurel-signout';
+  b.textContent = '로그아웃';
+  b.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:9998;padding:6px 11px;font-size:11px;'
+    + 'border:1px solid rgba(0,0,0,.16);border-radius:14px;background:rgba(255,255,255,.9);color:#7a736a;'
+    + 'cursor:pointer;font-family:inherit;backdrop-filter:blur(4px);';
+  b.onclick = function(){ if(confirm('로그아웃할까요?\n다음에 열 때 다시 로그인해야 합니다.')) signOut(auth).then(function(){ location.reload(); }); };
+  document.body.appendChild(b);
+}
 
 /* ═══════════ 상수 ═══════════ */
 var HOURS=[10,11,12,13,14,15,16,17,18,19];
