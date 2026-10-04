@@ -63,7 +63,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun 
 .pip.on2{background:var(--room2);border-color:transparent;}
 .pip.on6{background:var(--room6);border-color:transparent;}
 .pip.on8{background:var(--room8);border-color:transparent;}
-.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;min-width:0;max-width:100%;overflow:hidden;}
+.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;min-width:0;max-width:100%;overflow:hidden;border-left:4px solid transparent;}
+/* ★ 결제 — 현장에서 받아야 하는 예약은 빨간 테두리, 선결제는 초록 */
+.bk-mini.pay-get{background:#FFF4F2;border-left-color:#C0392B;}
+.bk-mini.pay-paid{background:#F2F9F4;border-left-color:#2E7D4F;}
+.bk-mini.pay-ask{background:#FFFBEF;border-left-color:#C9A227;}
+.btag-pay{font-weight:800;letter-spacing:-.2px;}
+.btag-get{background:#C0392B;color:#fff;}
+.btag-paid{background:#DCEFE3;color:#22663F;}
+.btag-ask{background:#FBF0CF;color:#8A6D10;}
+.paylegend{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;font-size:10.5px;}
+.paylegend span{padding:3px 9px;border-radius:10px;font-weight:700;}
 .bk-row{display:flex;align-items:center;gap:5px;min-width:0;}
 .bk-name{font-size:12px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bk-time{font-size:11px;font-weight:700;color:var(--accent);margin-right:5px;}
@@ -244,6 +254,11 @@ input:focus,select:focus{border-color:var(--green);background:white;}
       </div>
       <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
     </div>
+    <div class="paylegend" style="padding:0 12px">
+      <span class="btag-get">💵 결제 받기</span>
+      <span class="btag-paid">✅ 결제 완료</span>
+      <span class="btag-ask">❓ 결제 확인</span>
+    </div>
     <div class="slot-list" id="slotList"></div>
     <div style="height:14px"></div>
   </div>
@@ -316,7 +331,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mProgram" onchange="onProgramChange()"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>WAUG</option><option>Email</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -438,6 +453,23 @@ function zoneLabel(r){ return ZONE_LABEL[r]||(r+'인'); }
 
 var PROGRAM_DUR={'기본 케어 50분':50,'프리미엄 케어 60분':60,'퍼스널 피부 컨설팅 90분':90,'바디 케어':90,'미백 케어':50,'속눈썹펌':60,'부채 그림 & 캘리그라피 클래스':60};
 var DEFAULT_DUR=60;
+
+/* ═══════════ 결제 구분 ═══════════
+   plat  = 플랫폼에서 이미 결제함 (바우처 코드 있음) → 추가 결제 요청 금지
+   store = 매장에서 받아야 함
+   모르는 경로는 '확인'으로 띄워서 직원이 묻게 합니다. */
+var PAY_PLAT  = ['Klook','KKday','Trazy','Frip','프립','솜씨당','Airbnb','WAUG','와그'];
+var PAY_STORE = ['Naver','네이버','Website','웹사이트','WhatsApp','Instagram DM','KakaoTalk',
+                 'Acuity','Email','이메일','메일','직접 방문','워크인','Walk-in','전화'];
+function payOf(src){
+  if(!src) return 'ask';
+  var v=String(src).trim();
+  for(var i=0;i<PAY_PLAT.length;i++)  if(v.toLowerCase()===PAY_PLAT[i].toLowerCase())  return 'paid';
+  for(var j=0;j<PAY_STORE.length;j++) if(v.toLowerCase()===PAY_STORE[j].toLowerCase()) return 'get';
+  return 'ask';
+}
+var PAY_TXT={ get:'💵 결제 받기', paid:'✅ 결제 완료', ask:'❓ 결제 확인' };
+var PAY_CLS={ get:'btag-get',    paid:'btag-paid',  ask:'btag-ask' };
 
 var SRC_CLS={'Airbnb':'src-abnb','Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
 var CLASS_PROGRAMS=['부채 그림 & 캘리그라피 클래스'];
@@ -673,6 +705,8 @@ function goTab(tab){
 /* ═══════════ 렌더 ═══════════ */
 function bkMini(b){
   var sc=SRC_CLS[b.source]||'';
+  var pay=payOf(b.source);
+  var payTag='<span class="btag btag-pay '+PAY_CLS[pay]+'">'+PAY_TXT[pay]+'</span>';
   var dur=getDur(b);
   var ov=isValidSlot(b.slot)&&bksOverlap(b.date,toMin(b.slot),dur,b.room,b.id).length>0;
   var timeStr=isValidSlot(b.slot)?b.slot+'–'+toStr(toMin(b.slot)+dur):'??:??';
@@ -686,9 +720,9 @@ function bkMini(b){
   var noteTxt=noteRaw.replace(/https?:\/\/[^\s]+/g,' ').replace(/\s+/g,' ').replace(/^[\s📝•·\-|]+/,'').trim();
   var noteEl=noteTxt?'<div class="bk-note" onclick="toggleNote(this)">📝 '+esc(noteTxt)+'</div>':'';
   var linkEl=(urlM&&/^https?:\/\//.test(urlM[0]))?'<a class="bk-link" href="'+esc(urlM[0])+'" target="_blank" rel="noopener">🔗 원본 예약 열기</a>':'';
-  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name"><span class="bk-time'+(ov?' bk-ov':'')+'">'+esc(timeStr)+'</span>'+esc(b.name||'이름 미정')+' ('+(parseInt(b.pax)||1)+'명)</div>'
+  return '<div class="bk-mini pay-'+pay+'"><div class="bk-row"><div class="bk-name"><span class="bk-time'+(ov?' bk-ov':'')+'">'+esc(timeStr)+'</span>'+esc(b.name||'이름 미정')+' ('+(parseInt(b.pax)||1)+'명)</div>'
     +'<div class="bk-acts"><button class="bk-btn" onclick="openEdit('+jsq(b.id)+')">✏️</button><button class="bk-btn" onclick="delB('+jsq(b.id)+')">✕</button></div></div>'
-    +'<div class="bk-tags">'+bedTag+ovTag+roomTag+(b.lang?'<span class="btag">'+esc(b.lang)+'</span>':'')+progTag
+    +'<div class="bk-tags">'+payTag+bedTag+ovTag+roomTag+(b.lang?'<span class="btag">'+esc(b.lang)+'</span>':'')+progTag
     +(b.source?'<span class="btag '+sc+'">'+esc(b.source)+'</span>':'')+'</div>'+noteEl+linkEl+'</div>';
 }
 function zoneBlockHTML(date,hour,room){
@@ -768,8 +802,9 @@ function buildShareText(date){
       totalPax+=(parseInt(b.pax)||1);
       var dur=getDur(b);
       var bedStr=b.beds&&b.beds.length?' | 🛏️'+b.beds.join(',')+'번':'';
+      var pm=payOf(b.source); var pmk=(pm==='get'?' 💵결제받기':(pm==='ask'?' ❓결제확인':''));
       txt+='  '+b.slot+'–'+toStr(toMin(b.slot)+dur)+' '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '
-        +(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+'\n';
+        +(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+pmk+'\n';
     });
   });
   var orph=ofDate(date).filter(function(b){ return !isValidSlot(b.slot)||HOURS.indexOf(hourOf(b.slot))===-1; });
@@ -780,8 +815,9 @@ function buildShareText(date){
       var od=getDur(b);
       var ot=isValidSlot(b.slot)?(b.slot+'–'+toStr(toMin(b.slot)+od)):'??:??';
       var obed=b.beds&&b.beds.length?' | 🛏️'+b.beds.join(',')+'번':'';
+      var opm=payOf(b.source); var opmk=(opm==='get'?' 💵결제받기':(opm==='ask'?' ❓결제확인':''));
       txt+='  '+ot+' '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '
-        +(b.name||'이름미정')+' '+(parseInt(b.pax)||1)+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+obed+(b.program?' | '+b.program:'')+'\n';
+        +(b.name||'이름미정')+' '+(parseInt(b.pax)||1)+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+obed+(b.program?' | '+b.program:'')+opmk+'\n';
     });
   }
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
