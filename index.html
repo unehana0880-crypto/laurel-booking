@@ -6,19 +6,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Laurel Studio — 예약 관리</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap');
 :root{--bg:#F4F1EC;--dark:#1C1917;--card:#FFF;--border:#E5DDD5;--green:#4A7C59;--green-bg:#EBF4EE;--yellow:#B8860B;--yellow-bg:#FEF9E4;--red:#B94040;--red-bg:#FDEAEA;--mid:#7A726A;--accent:#C9A84C;--room2:#5B7FA6;--room2-bg:#EAF0F8;--room6:#7A5B9E;--room6-bg:#F0EAF8;--room8:#3E8E7E;--room8-bg:#E6F2EF;--tab-h:64px;--hdr-h:54px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark);display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark);display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
 .hdr{background:var(--dark);height:var(--hdr-h);padding:0 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .hdr-logo{font-family:'DM Serif Display',serif;font-size:18px;color:#F4F1EC;}
 .hdr-logo em{color:var(--accent);font-style:italic;}
 .hdr-date{font-size:11px;color:#9A9088;}
-.content{flex:1;min-width:0;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + 8px);}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + 8px);}
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--tab-h);background:var(--card);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);z-index:50;}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-family:inherit;padding:0;}
 .tab .ti{font-size:20px;line-height:1;}
@@ -26,7 +24,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun 
 .tab.active .tl{color:var(--green);}
 .tab.t-plus{background:var(--green);border-radius:14px;margin:8px 6px;}
 .tab.t-plus .tl{color:white!important;}
-.screen{display:none;min-width:0;max-width:100%;}.screen.active{display:block;}
+.screen{display:none;}.screen.active{display:block;}
 .today-hdr{padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;}
 .today-hdr-title{font-family:'DM Serif Display',serif;font-size:20px;}
 .btn-share{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--dark);color:white;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
@@ -40,9 +38,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun 
 .sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;}
 .sum-num{font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;line-height:1;}
 .sum-label{font-size:10px;color:var(--mid);margin-top:3px;font-weight:500;}
-.today-slots,.slot-list{padding:0 18px;display:flex;flex-direction:column;gap:8px;min-width:0;}
+.today-slots,.slot-list{padding:0 18px;display:flex;flex-direction:column;gap:8px;}
 .slot-list{padding:0 14px;}
-.ts-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:0;max-width:100%;}
+.ts-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .ts-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
 .ts-time{font-size:14px;font-weight:700;}
 .ts-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
@@ -50,9 +48,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun 
 .ts-partial{background:var(--yellow-bg);color:var(--yellow);}
 .ts-full{background:var(--red-bg);color:var(--red);}
 .ts-add{width:30px;height:30px;background:var(--green);color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ts-rooms{display:block;min-width:0;}
-.ts-divider{height:1px;background:var(--border);margin:0 12px;}
-.ts-room{padding:10px 12px;min-width:0;max-width:100%;}
+.ts-rooms{display:grid;grid-template-columns:1fr 1fr;}
+.ts-divider{width:1px;background:var(--border);}
+.ts-room{padding:10px 12px;}
 .ts-rlabel{font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
 .rb{padding:2px 7px;border-radius:20px;font-size:10px;}
 .rb2{background:var(--room2-bg);color:var(--room2);}
@@ -63,29 +61,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun 
 .pip.on2{background:var(--room2);border-color:transparent;}
 .pip.on6{background:var(--room6);border-color:transparent;}
 .pip.on8{background:var(--room8);border-color:transparent;}
-.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;min-width:0;max-width:100%;overflow:hidden;border-left:4px solid transparent;}
-/* ★ 결제 — 현장에서 받아야 하는 예약은 빨간 테두리, 선결제는 초록 */
-.bk-mini.pay-get{background:#FFF4F2;border-left-color:#C0392B;}
-.bk-mini.pay-paid{background:#F2F9F4;border-left-color:#2E7D4F;}
-.bk-mini.pay-ask{background:#FFFBEF;border-left-color:#C9A227;}
-.btag-pay{font-weight:800;letter-spacing:-.2px;}
-.btag-get{background:#C0392B;color:#fff;}
-.btag-paid{background:#DCEFE3;color:#22663F;}
-.btag-ask{background:#FBF0CF;color:#8A6D10;}
-.paylegend{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;font-size:10.5px;}
-.paylegend span{padding:3px 9px;border-radius:10px;font-weight:700;}
-.bk-row{display:flex;align-items:center;gap:5px;min-width:0;}
-.bk-name{font-size:12px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-mini{background:var(--bg);border-radius:7px;padding:7px 8px;margin-bottom:4px;}
+.bk-row{display:flex;align-items:center;gap:5px;}
+.bk-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bk-time{font-size:11px;font-weight:700;color:var(--accent);margin-right:5px;}
 .bk-time.bk-ov{color:var(--yellow);}
-.bk-acts{display:flex;gap:4px;flex-shrink:0;}
-.bk-btn{width:32px;height:32px;flex-shrink:0;border:1px solid var(--border);background:white;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
-.bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;min-width:0;}
-.btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;}
-.bk-note{margin-top:4px;font-size:11px;line-height:1.55;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:7px;padding:5px 8px;max-width:100%;overflow-wrap:anywhere;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}
-.bk-note.open{display:block;overflow:visible;}
-.bk-link{display:inline-flex;align-items:center;gap:3px;margin-top:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:var(--room2-bg);color:var(--room2);text-decoration:none;max-width:100%;}
-.btag-bed{background:var(--accent);color:white;font-weight:700;}
+.bk-acts{display:flex;gap:3px;}
+.bk-btn{width:26px;height:26px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.bk-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
+.btag{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--border);color:var(--mid);}
 .btag-class{background:#E5D5F0;color:var(--room6);font-weight:700;}
 .btag-ov{background:var(--yellow-bg);color:var(--yellow);font-weight:700;border:1px solid #F0D98A;}
 .src-klook{background:#FFF0E0;color:#C05000;}
@@ -167,14 +151,6 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 .btn-del-bk{padding:14px 16px;border:1.5px solid var(--red);color:var(--red);background:none;border-radius:12px;font-family:inherit;font-size:15px;cursor:pointer;}
 .no-sel{text-align:center;padding:60px 20px;color:var(--mid);}
 .no-sel .ni{font-size:48px;margin-bottom:12px;}
-.bed-picker{display:none;margin-top:8px;}
-.bed-picker.visible{display:block;}
-.bed-grid{display:flex;gap:6px;flex-wrap:wrap;}
-.bed-btn{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:white;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.bed-btn:active{transform:scale(.95);}
-.bed-btn.overlap{border-color:#F0D98A;background:var(--yellow-bg);color:var(--yellow);}
-.bed-btn.active{border-color:var(--accent);background:var(--accent);color:white;}
-.bed-room-label{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;}
 
 @media (min-width: 768px){
   body{ max-width:720px; } .tabbar{ max-width:720px; }
@@ -254,11 +230,6 @@ input:focus,select:focus{border-color:var(--green);background:white;}
       </div>
       <button class="btn-share" style="font-size:12px;padding:8px 12px;" onclick="openShare(selDate)">📤</button>
     </div>
-    <div class="paylegend" style="padding:0 12px">
-      <span class="btag-get">💵 결제 받기</span>
-      <span class="btag-paid">✅ 결제 완료</span>
-      <span class="btag-ask">❓ 결제 확인</span>
-    </div>
     <div class="slot-list" id="slotList"></div>
     <div style="height:14px"></div>
   </div>
@@ -312,17 +283,12 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 
       <div class="fg"><label>룸</label>
         <div class="room-picker">
-          <div class="rpick" id="rp8" onclick="pickRoom(8)"><div class="rn">4층</div><div class="rl">8명</div></div>
-          <div class="rpick" id="rp6" onclick="pickRoom(6)"><div class="rn">3층</div><div class="rl">6명</div></div>
-          <div class="rpick" id="rp2" onclick="pickRoom(2)"><div class="rn">바디</div><div class="rl">2명</div></div>
+          <div class="rpick" id="rp8" onclick="pickRoom(8)"><div class="rn">4층</div><div class="rl">페이셜 8</div></div>
+          <div class="rpick" id="rp6" onclick="pickRoom(6)"><div class="rn">3층</div><div class="rl">7명</div></div>
+          <div class="rpick" id="rp2" onclick="pickRoom(2)"><div class="rn">바디</div><div class="rl">세라젬 4 +1</div></div>
         </div>
       </div>
       <div class="fg"><label>인원</label><select id="mPax" onchange="checkCap()"><option value="">룸 먼저 선택</option></select></div>
-      <div class="fg">
-        <label>베드 번호 배정</label>
-        <div class="bed-picker" id="bedPicker"><div id="bedButtons"></div></div>
-        <div id="bedHint" style="font-size:11px;color:var(--mid);margin-top:4px;">룸과 시간을 선택하면 베드를 배정할 수 있어요</div>
-      </div>
       <div class="fg"><label>이름 (선택)</label><input type="text" id="mName" placeholder="고객 이름"></div>
       <div class="fg"><label>언어 (선택)</label>
         <select id="mLang"><option value="">모름/미정</option><option>영어</option><option>일본어</option><option>중국어</option><option>스페인어</option><option>프랑스어</option><option>독일어</option><option>아랍어</option><option>히브리어</option><option>한국어</option><option>기타</option></select>
@@ -331,7 +297,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mProgram" onchange="onProgramChange()"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>WAUG</option><option>Email</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -342,7 +308,6 @@ input:focus,select:focus{border-color:var(--green);background:white;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0nJAcOV64dq2QT2BVSsGxis99VTA2eEI",
@@ -355,90 +320,6 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-const auth = getAuth(app);
-
-/* ═══════════ 로그인 관문 ═══════════
-   여기서 멈춰 서서 로그인이 끝날 때까지 기다린다.
-   아래 코드는 로그인이 확인된 뒤에야 실행된다. 기존 로직은 손대지 않았다. */
-await (async function requireLogin(){
-  await setPersistence(auth, browserLocalPersistence);   // 한 번 로그인하면 브라우저가 기억
-
-  const already = await new Promise(function(res){
-    const stop = onAuthStateChanged(auth, function(u){ stop(); res(u); });
-  });
-  if(already) { mountSignOut(); return; }
-
-  const box = document.createElement('div');
-  box.id = 'laurel-login';
-  box.innerHTML =
-    '<style>'
-    + '#laurel-login{position:fixed;inset:0;z-index:99999;background:#faf9f7;display:flex;align-items:center;justify-content:center;padding:20px;'
-    + 'font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}'
-    + '#laurel-login .card{width:100%;max-width:340px;background:#fff;border:1px solid #e5e1da;border-radius:10px;padding:32px 26px;box-shadow:0 2px 14px rgba(0,0,0,.05);}'
-    + '#laurel-login h1{font-size:17px;margin:0 0 4px;color:#2f2b26;letter-spacing:.3px;}'
-    + '#laurel-login p.sub{font-size:12.5px;color:#8c857c;margin:0 0 22px;}'
-    + '#laurel-login label{display:block;font-size:11.5px;color:#8c857c;margin:0 0 5px;}'
-    + '#laurel-login input{width:100%;box-sizing:border-box;padding:11px 12px;font-size:15px;border:1px solid #ded9d1;border-radius:6px;margin-bottom:14px;font-family:inherit;background:#fff;color:#2f2b26;}'
-    + '#laurel-login input:focus{outline:none;border-color:#a89880;}'
-    + '#laurel-login button{width:100%;padding:12px;font-size:14.5px;border:0;border-radius:6px;background:#3f3a33;color:#fff;cursor:pointer;font-family:inherit;}'
-    + '#laurel-login button:disabled{opacity:.55;cursor:default;}'
-    + '#laurel-login .err{font-size:12.5px;color:#c0392b;min-height:17px;margin-top:11px;line-height:1.45;}'
-    + '</style>'
-    + '<div class="card">'
-    + '<h1>Laurel Studio</h1>'
-    + '<p class="sub">매장 계정으로 로그인해 주세요</p>'
-    + '<label>이메일</label><input id="lg-id" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">'
-    + '<label>비밀번호</label><input id="lg-pw" type="password" autocomplete="current-password">'
-    + '<button id="lg-go">로그인</button>'
-    + '<div class="err" id="lg-err"></div>'
-    + '</div>';
-  document.body.appendChild(box);
-
-  const idEl = box.querySelector('#lg-id');
-  const pwEl = box.querySelector('#lg-pw');
-  const btn  = box.querySelector('#lg-go');
-  const err  = box.querySelector('#lg-err');
-  idEl.focus();
-
-  await new Promise(function(done){
-    async function attempt(){
-      const id = idEl.value.trim(), pw = pwEl.value;
-      if(!id || !pw){ err.textContent = '이메일과 비밀번호를 모두 입력해 주세요'; return; }
-      btn.disabled = true; btn.textContent = '확인 중...'; err.textContent = '';
-      try{
-        await signInWithEmailAndPassword(auth, id, pw);
-        box.remove();
-        mountSignOut();
-        done();
-      }catch(e){
-        const c = e && e.code || '';
-        err.textContent =
-          (c === 'auth/invalid-email')                              ? '이메일 형식이 올바르지 않아요' :
-          (c === 'auth/too-many-requests')                          ? '시도가 너무 많아요 — 잠시 후 다시 해주세요' :
-          (c === 'auth/network-request-failed')                     ? '인터넷 연결을 확인해 주세요' :
-          (c === 'auth/user-disabled')                              ? '사용 중지된 계정이에요' :
-                                                                      '이메일 또는 비밀번호가 맞지 않아요';
-        btn.disabled = false; btn.textContent = '로그인';
-        pwEl.value = ''; pwEl.focus();
-      }
-    }
-    btn.addEventListener('click', attempt);
-    box.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') attempt(); });
-  });
-})();
-
-/* 헤더 구석에 작은 로그아웃 버튼 — 직원이 바뀌었을 때만 쓴다 */
-function mountSignOut(){
-  if(document.getElementById('laurel-signout')) return;
-  const b = document.createElement('button');
-  b.id = 'laurel-signout';
-  b.textContent = '로그아웃';
-  b.style.cssText = 'position:fixed;right:10px;bottom:74px;z-index:9998;padding:6px 11px;font-size:11px;'
-    + 'border:1px solid rgba(0,0,0,.16);border-radius:14px;background:rgba(255,255,255,.9);color:#7a736a;'
-    + 'cursor:pointer;font-family:inherit;backdrop-filter:blur(4px);';
-  b.onclick = function(){ if(confirm('로그아웃할까요?\n다음에 열 때 다시 로그인해야 합니다.')) signOut(auth).then(function(){ location.reload(); }); };
-  document.body.appendChild(b);
-}
 
 /* ═══════════ 상수 ═══════════ */
 var HOURS=[10,11,12,13,14,15,16,17,18,19];
@@ -446,30 +327,24 @@ var HOUR_LBL=['오전 10시','오전 11시','오후 12시','오후 1시','오후
 var MINUTES=[0,10,20,30,40,50];
 var CLOSE_MIN=(HOURS[HOURS.length-1]+1)*60;
 
-var ROOM_CAP={8:8,6:6,2:2};
+/* ★ 좌석 수 (2026-11 기준)
+     3층 페이셜           7자리
+     4층 페이셜           8자리  (6명자리 한 칸 + 2명자리 한 칸)
+                                 4층은 큰 칸 3개로 나뉘어 있고, 그중 둘이 페이셜입니다.
+                                 나머지 한 칸이 아래 「바디」입니다.
+     바디                 5자리  (세라젬 4 + 일반 베드 1)
+                                 2026-11: 바디 예약이 늘어 페이셜 자리를 줄이고
+                                 세라젬을 3대 → 4대로 늘렸습니다.
+   앞의 8·6·2 는 「구역 이름표」입니다. 예전 좌석 수에서 온 번호인데,
+   이미 저장된 예약들이 이 번호로 구역을 기억하고 있어 그대로 둡니다.
+   좌석 수를 바꾸실 때는 콜론 뒤 숫자만 고치시면 됩니다. */
+var ROOM_CAP={8:8,6:7,2:5};
 var TOTAL_CAP=ROOM_CAP[8]+ROOM_CAP[6]+ROOM_CAP[2];
 var ZONE_LABEL={8:'4층',6:'3층',2:'바디'};
 function zoneLabel(r){ return ZONE_LABEL[r]||(r+'인'); }
 
 var PROGRAM_DUR={'기본 케어 50분':50,'프리미엄 케어 60분':60,'퍼스널 피부 컨설팅 90분':90,'바디 케어':90,'미백 케어':50,'속눈썹펌':60,'부채 그림 & 캘리그라피 클래스':60};
 var DEFAULT_DUR=60;
-
-/* ═══════════ 결제 구분 ═══════════
-   plat  = 플랫폼에서 이미 결제함 (바우처 코드 있음) → 추가 결제 요청 금지
-   store = 매장에서 받아야 함
-   모르는 경로는 '확인'으로 띄워서 직원이 묻게 합니다. */
-var PAY_PLAT  = ['Klook','KKday','Trazy','Frip','프립','솜씨당','Airbnb','WAUG','와그'];
-var PAY_STORE = ['Naver','네이버','Website','웹사이트','WhatsApp','Instagram DM','KakaoTalk',
-                 'Acuity','Email','이메일','메일','직접 방문','워크인','Walk-in','전화'];
-function payOf(src){
-  if(!src) return 'ask';
-  var v=String(src).trim();
-  for(var i=0;i<PAY_PLAT.length;i++)  if(v.toLowerCase()===PAY_PLAT[i].toLowerCase())  return 'paid';
-  for(var j=0;j<PAY_STORE.length;j++) if(v.toLowerCase()===PAY_STORE[j].toLowerCase()) return 'get';
-  return 'ask';
-}
-var PAY_TXT={ get:'💵 결제 받기', paid:'✅ 결제 완료', ask:'❓ 결제 확인' };
-var PAY_CLS={ get:'btag-get',    paid:'btag-paid',  ask:'btag-ask' };
 
 var SRC_CLS={'Airbnb':'src-abnb','Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
 var CLASS_PROGRAMS=['부채 그림 & 캘리그라피 클래스'];
@@ -558,7 +433,7 @@ function reindex(){
   byDate={};
   bookings.forEach(function(b){ (byDate[b.date]||(byDate[b.date]=[])).push(b); });
 }
-var mRoom=null, mSlot=null, mHour=null, mMin=null, editId=null, editBase=0, mBeds=[];
+var mRoom=null, mSlot=null, mHour=null, mMin=null, editId=null, editBase=0;
 /* G: 두 기기에서 같은 초를 눌러도 겹치지 않는 id */
 function newId(){ return 'bk'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
@@ -604,43 +479,12 @@ function dayStatus(date){
   });
   return full===0?'none':full===total?'full':'partial';
 }
-function takenBeds(date,slot,room,exclId,dur){
-  var beds=[];
-  bksOverlap(date,toMin(slot),dur||DEFAULT_DUR,room,exclId).forEach(function(b){
-    if(b.beds&&b.beds.length) beds=beds.concat(b.beds);
-  });
-  return beds;
-}
-
-/* ═══════════ 베드 ═══════════ */
+/* ═══════════ 시술 시간 ═══════════ */
 function curDur(){
   var v=parseInt(document.getElementById('mDur').value);
   if(v) return v;
   return PROGRAM_DUR[document.getElementById('mProgram').value]||DEFAULT_DUR;
 }
-function renderBedPicker(){
-  var picker=document.getElementById('bedPicker'), hint=document.getElementById('bedHint'), btnsEl=document.getElementById('bedButtons');
-  var date=document.getElementById('mDate').value;
-  if(!mRoom||!mSlot||!date){ picker.classList.remove('visible'); hint.textContent='룸과 시간을 선택하면 베드를 배정할 수 있어요'; return; }
-  picker.classList.add('visible');
-  var maxBed=mRoom, taken=takenBeds(date,mSlot,mRoom,editId,curDur());
-  var pax=parseInt(document.getElementById('mPax').value)||0;
-  var html='<div class="bed-room-label">🛏️ '+zoneLabel(mRoom)+' 베드 선택'+(pax?' ('+pax+'명 → '+pax+'개 선택)':'')+'</div><div class="bed-grid">';
-  for(var i=1;i<=maxBed;i++){
-    var isTaken=taken.indexOf(i)!==-1, isActive=mBeds.indexOf(i)!==-1;
-    html+='<button class="bed-btn'+(isActive?' active':'')+(isTaken?' overlap':'')+'" onclick="toggleBed('+i+')">'+i+'</button>';
-  }
-  html+='</div>';
-  btnsEl.innerHTML=html;
-  hint.innerHTML=taken.length?'<span style="color:var(--yellow)">노란 베드는 시간이 겹쳐요 — 필요하면 그대로 배정 가능</span>':'';
-}
-window.toggleBed=function(num){
-  var i=mBeds.indexOf(num);
-  if(i!==-1) mBeds.splice(i,1); else mBeds.push(num);
-  mBeds.sort(function(a,b){return a-b;});
-  renderBedPicker();
-};
-
 /* ═══════════ 동기화 ═══════════ */
 function setSyncStatus(st){
   var dot=document.getElementById('syncDot'), label=document.getElementById('syncLabel');
@@ -705,25 +549,17 @@ function goTab(tab){
 /* ═══════════ 렌더 ═══════════ */
 function bkMini(b){
   var sc=SRC_CLS[b.source]||'';
-  var pay=payOf(b.source);
-  var payTag='<span class="btag btag-pay '+PAY_CLS[pay]+'">'+PAY_TXT[pay]+'</span>';
   var dur=getDur(b);
   var ov=isValidSlot(b.slot)&&bksOverlap(b.date,toMin(b.slot),dur,b.room,b.id).length>0;
   var timeStr=isValidSlot(b.slot)?b.slot+'–'+toStr(toMin(b.slot)+dur):'??:??';
-  var bedTag=b.beds&&b.beds.length?'<span class="btag btag-bed">🛏️ '+esc(b.beds.join(','))+'번</span>':'';
   var isClass=b.program&&CLASS_PROGRAMS.indexOf(b.program)!==-1;
   var progTag=b.program?'<span class="btag '+(isClass?'btag-class':'')+'">'+(isClass?'🎨 ':'')+esc(b.program)+'</span>':'';
   var ovTag=ov?'<span class="btag btag-ov">⚠ 겹침</span>':'';
   var roomTag=b.roomGuessed?'<span class="btag btag-ov">🚪 룸 미정 — 확인 필요</span>':'';
-  var noteRaw=b.note?String(b.note):'';
-  var urlM=noteRaw.match(/https?:\/\/[^\s]+/);
-  var noteTxt=noteRaw.replace(/https?:\/\/[^\s]+/g,' ').replace(/\s+/g,' ').replace(/^[\s📝•·\-|]+/,'').trim();
-  var noteEl=noteTxt?'<div class="bk-note" onclick="toggleNote(this)">📝 '+esc(noteTxt)+'</div>':'';
-  var linkEl=(urlM&&/^https?:\/\//.test(urlM[0]))?'<a class="bk-link" href="'+esc(urlM[0])+'" target="_blank" rel="noopener">🔗 원본 예약 열기</a>':'';
-  return '<div class="bk-mini pay-'+pay+'"><div class="bk-row"><div class="bk-name"><span class="bk-time'+(ov?' bk-ov':'')+'">'+esc(timeStr)+'</span>'+esc(b.name||'이름 미정')+' ('+(parseInt(b.pax)||1)+'명)</div>'
+  return '<div class="bk-mini"><div class="bk-row"><div class="bk-name"><span class="bk-time'+(ov?' bk-ov':'')+'">'+esc(timeStr)+'</span>'+esc(b.name||'이름 미정')+' ('+(parseInt(b.pax)||1)+'명)</div>'
     +'<div class="bk-acts"><button class="bk-btn" onclick="openEdit('+jsq(b.id)+')">✏️</button><button class="bk-btn" onclick="delB('+jsq(b.id)+')">✕</button></div></div>'
-    +'<div class="bk-tags">'+payTag+bedTag+ovTag+roomTag+(b.lang?'<span class="btag">'+esc(b.lang)+'</span>':'')+progTag
-    +(b.source?'<span class="btag '+sc+'">'+esc(b.source)+'</span>':'')+'</div>'+noteEl+linkEl+'</div>';
+    +'<div class="bk-tags">'+ovTag+roomTag+(b.lang?'<span class="btag">'+esc(b.lang)+'</span>':'')+progTag
+    +(b.source?'<span class="btag '+sc+'">'+esc(b.source)+'</span>':'')+(b.note?'<span class="btag">📝'+esc(b.note)+'</span>':'')+'</div></div>';
 }
 function zoneBlockHTML(date,hour,room){
   var rem=roomRemHour(date,hour,room), cap=ROOM_CAP[room], used=Math.max(0,cap-rem);
@@ -801,10 +637,8 @@ function buildShareText(date){
     bks.forEach(function(b){
       totalPax+=(parseInt(b.pax)||1);
       var dur=getDur(b);
-      var bedStr=b.beds&&b.beds.length?' | 🛏️'+b.beds.join(',')+'번':'';
-      var pm=payOf(b.source); var pmk=(pm==='get'?' 💵결제받기':(pm==='ask'?' ❓결제확인':''));
       txt+='  '+b.slot+'–'+toStr(toMin(b.slot)+dur)+' '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '
-        +(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+bedStr+(b.program?' | '+b.program:'')+pmk+'\n';
+        +(b.name||'이름미정')+' '+b.pax+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(b.program?' | '+b.program:'')+'\n';
     });
   });
   var orph=ofDate(date).filter(function(b){ return !isValidSlot(b.slot)||HOURS.indexOf(hourOf(b.slot))===-1; });
@@ -814,10 +648,8 @@ function buildShareText(date){
       totalPax+=(parseInt(b.pax)||1);
       var od=getDur(b);
       var ot=isValidSlot(b.slot)?(b.slot+'–'+toStr(toMin(b.slot)+od)):'??:??';
-      var obed=b.beds&&b.beds.length?' | 🛏️'+b.beds.join(',')+'번':'';
-      var opm=payOf(b.source); var opmk=(opm==='get'?' 💵결제받기':(opm==='ask'?' ❓결제확인':''));
       txt+='  '+ot+' '+(b.room===8?'🟢4층':b.room===6?'🟣3층':'🔵바디')+' '
-        +(b.name||'이름미정')+' '+(parseInt(b.pax)||1)+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+obed+(b.program?' | '+b.program:'')+opmk+'\n';
+        +(b.name||'이름미정')+' '+(parseInt(b.pax)||1)+'명'+(b.lang?' | '+b.lang:'')+(b.source?' | '+b.source:'')+(b.program?' | '+b.program:'')+'\n';
     });
   }
   txt+='\n'+'─'.repeat(22)+'\n👥 총 '+totalPax+'명';
@@ -864,20 +696,20 @@ function renderMinPicker(){
   } else { pt.textContent='분을 선택하세요'; }
 }
 function pickHour(h){
-  mHour=h; mMin=null; mSlot=null; mBeds=[];
+  mHour=h; mMin=null; mSlot=null;
   document.querySelectorAll('.tpick').forEach(function(el){ el.classList.toggle('active',parseInt(el.dataset.h)===h); });
-  renderMinPicker(); checkCap(); renderBedPicker();
+  renderMinPicker(); checkCap();
 }
 function pickMin(mm){
-  mMin=mm; mSlot=toStr(mHour*60+mm); mBeds=[];
-  renderMinPicker(); checkCap(); renderBedPicker();
+  mMin=mm; mSlot=toStr(mHour*60+mm);
+  renderMinPicker(); checkCap();
 }
-function onDurChange(){ renderMinPicker(); checkCap(); renderBedPicker(); }
-function onProgramChange(){ renderMinPicker(); checkCap(); renderBedPicker(); }
+function onDurChange(){ renderMinPicker(); checkCap(); }
+function onProgramChange(){ renderMinPicker(); checkCap(); }
 
 /* ═══════════ 모달 ═══════════ */
 function openModal(date,hour){
-  editId=null; editBase=0; mRoom=null; mSlot=null; mMin=null; mBeds=[];
+  editId=null; editBase=0; mRoom=null; mSlot=null; mMin=null;
   mHour=(hour!==undefined&&hour!==null)?hour:null;
   document.getElementById('sheetTitle').textContent='예약 추가';
   document.getElementById('editChip').style.display='none';
@@ -895,7 +727,7 @@ function ensureDurOption(v){
 }
 function openEdit(id){
   var b=bookings.find(function(x){return x.id===id;}); if(!b) return;
-  editId=id; editBase=b.updatedAt||0; mRoom=b.room; mSlot=b.slot; mBeds=b.beds?b.beds.slice():[];
+  editId=id; editBase=b.updatedAt||0; mRoom=b.room; mSlot=b.slot;
   mHour=isValidSlot(b.slot)?hourOf(b.slot):null; mMin=isValidSlot(b.slot)?toMin(b.slot)%60:null;
   document.getElementById('sheetTitle').textContent='예약 수정';
   document.getElementById('editChip').style.display='inline-flex';
@@ -913,9 +745,8 @@ function openEdit(id){
   document.getElementById('rp8').className='rpick'+(b.room===8?' active':'');
   document.getElementById('rp6').className='rpick'+(b.room===6?' active':'');
   document.getElementById('rp2').className='rpick'+(b.room===2?' active':'');
-  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
-  for(var i=1;i<=b.room;i++) pax.innerHTML+='<option value="'+i+'"'+(i===b.pax?' selected':'')+'>'+i+'명</option>';
-  checkCap(); renderBedPicker();
+  fillPax(b.room,b.pax);
+  checkCap();
   document.getElementById('overlay').classList.add('open');
 }
 function resetForm(date){
@@ -929,24 +760,34 @@ function resetForm(date){
   ds.value='';
   document.getElementById('sheetAlert').innerHTML='';
   document.getElementById('rp8').className='rpick'; document.getElementById('rp6').className='rpick'; document.getElementById('rp2').className='rpick';
-  mBeds=[];
-  renderTimePicker(); renderBedPicker();
+  renderTimePicker();
 }
-function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; editBase=0; mBeds=[]; }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; editBase=0; }
+/* 인원 드롭다운.
+   좌석 수를 줄인 뒤에도 예전 예약(정원보다 많은 인원)을 열었을 때
+   인원이 빈칸으로 바뀌어 버리지 않도록, 기존 값은 항상 남겨둡니다. */
+function fillPax(room,cur){
+  var pax=document.getElementById('mPax');
+  pax.innerHTML='<option value="">선택</option>';
+  var cap=ROOM_CAP[room]||0, top=Math.max(cap,cur||0);
+  for(var i=1;i<=top;i++){
+    pax.innerHTML+='<option value="'+i+'"'+(i===cur?' selected':'')+'>'
+      +i+'명'+(i>cap?' ⚠ 정원 초과':'')+'</option>';
+  }
+}
 function pickRoom(n){
-  mRoom=n; mBeds=[];
+  mRoom=n;
   document.getElementById('rp8').className='rpick'+(n===8?' active':'');
   document.getElementById('rp6').className='rpick'+(n===6?' active':'');
   document.getElementById('rp2').className='rpick'+(n===2?' active':'');
-  var pax=document.getElementById('mPax'); pax.innerHTML='<option value="">선택</option>';
-  for(var i=1;i<=n;i++) pax.innerHTML+='<option value="'+i+'">'+i+'명</option>';
-  checkCap(); renderBedPicker();
+  fillPax(n,null);
+  checkCap();
 }
 function onDateChange(){
   var d=document.getElementById('mDate').value;
   if(d){ selDate=d; renderCal(); }
-  mSlot=null; mMin=null; mBeds=[];
-  renderTimePicker(); checkCap(); renderBedPicker();
+  mSlot=null; mMin=null;
+  renderTimePicker(); checkCap();
 }
 function checkCap(){
   var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0;
@@ -956,7 +797,7 @@ function checkCap(){
   if(rem<=0) al.innerHTML='<div class="malert a-warn">⚠️ '+zoneLabel(mRoom)+' '+mSlot+'에 이미 자리가 다 찼어요 — 그래도 저장할 수 있어요</div>';
   else if(pax>rem) al.innerHTML='<div class="malert a-warn">⚠️ '+zoneLabel(mRoom)+' '+rem+'자리만 남아요</div>';
   else al.innerHTML='<div class="malert a-ok">✓ 예약 가능 — 저장 후 '+(rem-pax)+'자리 남음</div>';
-  renderBedPicker();
+ 
 }
 async function saveB(){
   var date=document.getElementById('mDate').value, pax=parseInt(document.getElementById('mPax').value)||0;
@@ -967,15 +808,8 @@ async function saveB(){
   if(!pax){ al.innerHTML='<div class="malert a-err">인원을 선택해주세요</div>'; return; }
   var dur=curDur(), rem=roomRemAt(date,toMin(mSlot),dur,mRoom,editId);
 
-  /* I — 베드 검증 */
-  if(mBeds.some(function(n){return n<1||n>ROOM_CAP[mRoom];})){
-    al.innerHTML='<div class="malert a-err">'+zoneLabel(mRoom)+'에 없는 베드 번호가 골라져 있어요 (1~'+ROOM_CAP[mRoom]+'번)</div>'; return;
-  }
   if(pax>ROOM_CAP[mRoom]){
     al.innerHTML='<div class="malert a-err">'+zoneLabel(mRoom)+'은 최대 '+ROOM_CAP[mRoom]+'명까지예요</div>'; return;
-  }
-  if(mBeds.length&&mBeds.length!==pax){
-    if(!confirm('베드는 '+mBeds.length+'개 골랐는데 인원은 '+pax+'명이에요.\n그대로 저장할까요?')) return;
   }
   if(pax>rem){
     if(!confirm(zoneLabel(mRoom)+' '+mSlot+' 잔여 '+rem+'자리인데 '+pax+'명이에요.\n그래도 저장할까요?')) return;
@@ -992,7 +826,6 @@ async function saveB(){
   }
 
   var bk={ id:editId||newId(), date:date, slot:mSlot, dur:dur, room:mRoom, pax:pax,
-    beds:mBeds.length?mBeds:[],
     name:document.getElementById('mName').value.trim(),
     lang:document.getElementById('mLang').value,
     program:document.getElementById('mProgram').value,
@@ -1010,7 +843,6 @@ async function delB(id,fromModal){
   if(fromModal) closeModal();
 }
 
-window.toggleNote=function(el){ el.classList.toggle('open'); };
 window.goTab=goTab; window.openModal=openModal; window.openEdit=openEdit;
 window.closeModal=closeModal; window.saveB=saveB; window.delB=delB;
 window.pickRoom=pickRoom; window.pickHour=pickHour; window.pickMin=pickMin;
