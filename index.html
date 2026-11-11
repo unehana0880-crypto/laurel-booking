@@ -78,6 +78,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--dark
 .src-web{background:var(--green-bg);color:var(--green);}
 .src-kkt{background:#FEF9D6;color:#7A6500;}
 .src-abnb{background:#FFE8EC;color:#C4204A;}
+.src-mail{background:#E9F0FA;color:#2B5EA7;}
+.src-trial{background:#F2EAFB;color:#6B4C9A;}
 .empty-r{font-size:11px;color:var(--border);padding:2px 0;}
 .share-popup{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:200;align-items:flex-end;justify-content:center;}
 .share-popup.open{display:flex;}
@@ -297,7 +299,7 @@ input:focus,select:focus{border-color:var(--green);background:white;}
         <select id="mProgram" onchange="onProgramChange()"><option value="">모름/미정</option><option>기본 케어 50분</option><option>프리미엄 케어 60분</option><option>퍼스널 피부 컨설팅 90분</option><option>바디 케어</option><option>미백 케어</option><option>속눈썹펌</option><option>부채 그림 &amp; 캘리그라피 클래스</option></select>
       </div>
       <div class="fg"><label>예약 경로</label>
-        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>KakaoTalk</option><option>Acuity</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>직접 방문</option><option>기타</option></select>
+        <select id="mSource"><option value="">선택</option><option>Airbnb</option><option>Klook</option><option>KKday</option><option>Instagram DM</option><option>WhatsApp</option><option>Website</option><option>이메일</option><option>Frip</option><option>솜씨당</option><option>Naver</option><option>Trazy</option><option>체험단</option><option>직접 방문</option><option>기타</option></select>
       </div>
       <div class="fg"><label>메모 (선택)</label><input type="text" id="mNote" placeholder="특이사항"></div>
     </div>
@@ -346,7 +348,7 @@ function zoneLabel(r){ return ZONE_LABEL[r]||(r+'인'); }
 var PROGRAM_DUR={'기본 케어 50분':50,'프리미엄 케어 60분':60,'퍼스널 피부 컨설팅 90분':90,'바디 케어':90,'미백 케어':50,'속눈썹펌':60,'부채 그림 & 캘리그라피 클래스':60};
 var DEFAULT_DUR=60;
 
-var SRC_CLS={'Airbnb':'src-abnb','Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Acuity':'src-web','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook'};
+var SRC_CLS={'Airbnb':'src-abnb','Klook':'src-klook','KKday':'src-klook','Instagram DM':'src-ig','WhatsApp':'src-wa','Website':'src-web','KakaoTalk':'src-kkt','Frip':'src-web','솜씨당':'src-web','Naver':'src-web','Trazy':'src-klook','이메일':'src-mail','체험단':'src-trial'};
 var CLASS_PROGRAMS=['부채 그림 & 캘리그라피 클래스'];
 
 /* ═══════════ 정규화 ═══════════ */
@@ -381,8 +383,9 @@ function normalizeSource(s){
   if(!s) return '';
   var v=String(s).toLowerCase();
   if(v==='airbnb') return 'Airbnb';
-  if(v==='acuity') return 'Acuity';
+  if(v==='acuity') return 'Website';   // Acuity = 웹사이트 예약
   if(v==='klook') return 'Klook';
+  if(v==='email'||v==='e-mail'||v==='mail'||v==='gmail'||v==='메일') return '이메일';
   return s;
 }
 /* ISO 문자열이 타임존(Z·+09:00)을 달고 오면 로컬 시각으로 환산한다.
@@ -736,7 +739,7 @@ function openEdit(id){
   document.getElementById('mName').value=b.name||'';
   document.getElementById('mLang').value=b.lang||'';
   document.getElementById('mProgram').value=b.program||'';
-  document.getElementById('mSource').value=b.source||'';
+  setSelectValue('mSource',b.source||'');
   document.getElementById('mNote').value=b.note||'';
   ensureDurOption(b.dur);
   document.getElementById('mDur').value=b.dur||'';
@@ -763,6 +766,17 @@ function resetForm(date){
   renderTimePicker();
 }
 function closeModal(){ document.getElementById('overlay').classList.remove('open'); editId=null; editBase=0; }
+/* 드롭다운에서 빠진 예전 값(카카오톡 등)으로 저장된 예약을 열었을 때
+   값이 빈칸으로 바뀌어 사라지지 않도록, 없으면 항목을 만들어 줍니다. */
+function setSelectValue(id,val){
+  var el=document.getElementById(id);
+  if(val && !Array.prototype.some.call(el.options,function(o){return o.value===val;})){
+    var o=document.createElement('option');
+    o.value=val; o.textContent=val+' (예전 경로)';
+    el.appendChild(o);
+  }
+  el.value=val;
+}
 /* 인원 드롭다운.
    좌석 수를 줄인 뒤에도 예전 예약(정원보다 많은 인원)을 열었을 때
    인원이 빈칸으로 바뀌어 버리지 않도록, 기존 값은 항상 남겨둡니다. */
